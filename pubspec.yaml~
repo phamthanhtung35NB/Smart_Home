@@ -41,6 +41,8 @@ dependencies:
   firebase_storage: ^12.4.2
   firebase_messaging: ^15.2.2
   firebase_database: ^11.3.2
+  flutter_colorpicker: ^1.0.3
+  convex_bottom_bar: ^3.2.0
 
 dev_dependencies:
   flutter_test:
