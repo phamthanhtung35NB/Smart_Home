@@ -28,32 +28,32 @@ class _LedControllerState extends State<LedController> {
   ];
 
   void _updateDatabase(String key, dynamic value) {
-    _database.child(key).set(value);
+    _database.child('led/$key').set(value);
   }
 
   void _syncDataFromFirebase() async {
-    final effectSnapshot = await _database.child('currentEffect').once();
+    final effectSnapshot = await _database.child('led/currentEffect').once();
     if (effectSnapshot.snapshot.value != null) {
       setState(() {
         _currentEffect = effectSnapshot.snapshot.value as int;
       });
     }
 
-    final brightnessSnapshot = await _database.child('brightness').once();
+    final brightnessSnapshot = await _database.child('led/brightness').once();
     if (brightnessSnapshot.snapshot.value != null) {
       setState(() {
         _brightness = (brightnessSnapshot.snapshot.value as num).toDouble();
       });
     }
 
-    final speedSnapshot = await _database.child('speed').once();
+    final speedSnapshot = await _database.child('led/speed').once();
     if (speedSnapshot.snapshot.value != null) {
       setState(() {
         _speed = (speedSnapshot.snapshot.value as num).toDouble();
       });
     }
 
-    final colorSnapshot = await _database.child('color').once();
+    final colorSnapshot = await _database.child('led/color').once();
     if (colorSnapshot.snapshot.value != null) {
       final Map<dynamic, dynamic> colorMap =
       colorSnapshot.snapshot.value as Map<dynamic, dynamic>;
@@ -67,7 +67,6 @@ class _LedControllerState extends State<LedController> {
       });
     }
   }
-
   @override
   void initState() {
     super.initState();

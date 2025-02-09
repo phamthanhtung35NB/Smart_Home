@@ -5,401 +5,462 @@
 #include <time.h>
 #include "config.h"
 
-// Cấu hình NeoPixel
-#define LED_PIN 4  // Đổi sang GPIO4
-
-#define NUMPIXELS 18
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
-
-// Firebase configuration
+// Cấu hình Firebase
 FirebaseConfig configF;
 FirebaseAuth auth;
 FirebaseData fbdo;
 
+// Cấu hình NeoPixel
+#define LED_PIN 4
+#define NUMPIXELS 18
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
 // Biến điều khiển từ Firebase
-int brightness = 200; // Độ sáng mặc định
-int speed = 50;       // Tốc độ mặc định
-uint32_t selectedColor = pixels.Color(255, 0, 0); // Màu mặc định (đỏ)
+int brightness = 200;                              // Độ sáng mặc định
+int speed = 50;                                    // Tốc độ mặc định
+uint32_t selectedColor = pixels.Color(255, 0, 0);  // Màu mặc định (đỏ)
+int currentEffect = 0;                             // Hiệu ứng hiện tại
+
+bool is_bom = true;                                // Trạng thái máy bơm
+bool is_led = true;                                // Trạng thái đèn lớn
+int airPumpSpeed = 5;                              // Tốc độ máy bơm khí
+
+// Các chân GPIO
+// const int btn_bom = 9;  
+const int ena = 5;  // PWM
+// const int in1 = 4;
+const int in2_bom = 18;  // Điều khiển máy bơm
+const int role_led = 19; // Điều khiển đèn lớn
+// const int latchPin = 10;
+// const int clockPin = 12;
+// const int dataPin = 11;
+
+// // Mảng cho LED 7 đoạn
+// const int Seg[20] = {
+//   0b00111111,  // 0
+//   0b00000110,  // 1
+//   0b01011011,  // 2
+//   0b01001111,  // 3
+//   0b01100110,  // 4
+//   0b01101101,  // 5
+//   0b01111101,  // 6
+//   0b00000111,  // 7
+//   0b01111111,  // 8
+//   0b01101111,  // 9
+//   0b10111111,  // 0.
+//   0b10000110,  // 1.
+//   0b11011011,  // 2.
+//   0b11001111,  // 3.
+//   0b11100110,  // 4.
+//   0b11101101,  // 5.
+//   0b11111101,  // 6.
+//   0b10000111,  // 7.
+//   0b11111111,  // 8.
+//   0b11101111   // 9.
+// };
 
 // Network credentials
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 
-int currentEffect = 2; // Hiệu ứng hiện tại
-int totalEffects = 10;  // Tổng số hiệu ứng
 
 bool initWifi() {
-    WiFi.begin(ssid, password);
-    unsigned long wifiTimeout = millis() + 10000; // Giới hạn thời gian 10 giây
-    while (WiFi.status() != WL_CONNECTED && millis() < wifiTimeout) {
-        delay(500);
-        Serial.print(".");
-    }
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("\nConnected to WiFi");
-        Serial.print("IP Address: ");
-        Serial.println(WiFi.localIP());
-        return true;
-    } else {
-        Serial.println("\nFailed to connect to WiFi");
-        return false;
-    }
+  WiFi.begin(ssid, password);
+  unsigned long wifiTimeout = millis() + 10000;  // Giới hạn thời gian 10 giây
+  while (WiFi.status() != WL_CONNECTED && millis() < wifiTimeout) {
+    delay(500);
+    Serial.print(".");
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nConnected to WiFi");
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+    return true;
+  } else {
+    Serial.println("\nFailed to connect to WiFi");
+    return false;
+  }
 }
 
 void syncTime() {
-    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
-    struct tm timeinfo;
-    int retry = 10; // Số lần thử tối đa
+  struct tm timeinfo;
+  int retry = 10;  // Số lần thử tối đa
 
-    while (retry-- > 0) {
-        if (getLocalTime(&timeinfo)) {
-            Serial.println("Time synchronized successfully");
-            return;
-        }
-        Serial.println("Retrying time sync...");
-        delay(2000);
+  while (retry-- > 0) {
+    if (getLocalTime(&timeinfo)) {
+      Serial.println("Time synchronized successfully");
+      return;
     }
+    Serial.println("Retrying time sync...");
+    delay(2000);
+  }
 
-    Serial.println("Failed to obtain time after multiple attempts");
+  Serial.println("Failed to obtain time after multiple attempts");
 }
 
 
 void initFirebase() {
-    configF.api_key = API_KEY;
-    auth.user.email = USER_EMAIL;
-    auth.user.password = USER_PASSWORD;
-    configF.database_url = DATABASE_URL;
-    configF.token_status_callback = tokenStatusCallback;
-    Firebase.begin(&configF, &auth);
-    Firebase.reconnectWiFi(true);
+  configF.api_key = API_KEY;
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
+  configF.database_url = DATABASE_URL;
+  configF.token_status_callback = tokenStatusCallback;
+  Firebase.begin(&configF, &auth);
+  Firebase.reconnectWiFi(true);
 
-    // Bắt đầu stream
-    if (!Firebase.RTDB.beginStream(&fbdo, "/")) {
-        Serial.printf("Stream setup failed: %s\n", fbdo.errorReason().c_str());
-    } else {
-        Serial.println("Firebase stream initialized successfully.");
-    }
+  // Bắt đầu stream
+  if (!Firebase.RTDB.beginStream(&fbdo, "/")) {
+    Serial.printf("Stream setup failed: %s\n", fbdo.errorReason().c_str());
+  } else {
+    Serial.println("Firebase stream initialized successfully.");
+  }
 }
 void _syncDataFromFirebase() {
-    // Đọc currentEffect
-    if (Firebase.RTDB.getInt(&fbdo, "/currentEffect")) {
-        currentEffect = fbdo.intData();
-        Serial.printf("Initial Effect: %d\n", currentEffect);
-    } else {
-        Serial.println("Failed to read initial effect from Firebase.");
-    }
+  // Đọc trạng thái máy bơm
+  if (Firebase.RTDB.getBool(&fbdo, "/aquarium/waterPump")) {
+    is_bom = fbdo.boolData();
+    digitalWrite(in2_bom, is_bom ? HIGH : LOW);
+  }
 
-    // Đọc brightness
-    if (Firebase.RTDB.getInt(&fbdo, "/brightness")) {
-        brightness = fbdo.intData();
-        pixels.setBrightness(brightness);
-        Serial.printf("Initial Brightness: %d\n", brightness);
-    } else {
-        Serial.println("Failed to read initial brightness from Firebase.");
-    }
+  // Đọc trạng thái đèn lớn
+  if (Firebase.RTDB.getBool(&fbdo, "/aquarium/bigLight")) {
+    is_led = fbdo.boolData();
+    digitalWrite(role_led, is_led ? HIGH : LOW);
+  }
 
-    // Đọc speed
-    if (Firebase.RTDB.getInt(&fbdo, "/speed")) {
-        speed = fbdo.intData();
-        Serial.printf("Initial Speed: %d\n", speed);
-    } else {
-        Serial.println("Failed to read initial speed from Firebase.");
-    }
+  // Đọc tốc độ máy bơm khí
+  if (Firebase.RTDB.getInt(&fbdo, "/aquarium/airPumpSpeed")) {
+    airPumpSpeed = fbdo.intData();
+    analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+  }
 
-    // Đọc color
-    if (Firebase.RTDB.getJSON(&fbdo, "/color")) {
-        FirebaseJson json = fbdo.jsonObject();
-        FirebaseJsonData jsonData;
+  // Đọc dữ liệu LED
+  if (Firebase.RTDB.getInt(&fbdo, "/led/currentEffect")) {
+    currentEffect = fbdo.intData();
+  }
+  if (Firebase.RTDB.getInt(&fbdo, "/led/brightness")) {
+    brightness = fbdo.intData();
+    pixels.setBrightness(brightness);
+  }
+  if (Firebase.RTDB.getInt(&fbdo, "/led/speed")) {
+    speed = fbdo.intData();
+  }
+  if (Firebase.RTDB.getJSON(&fbdo, "/led/color")) {
+    FirebaseJson json = fbdo.jsonObject();
+    FirebaseJsonData jsonData;
 
-        // Lấy giá trị màu đỏ (r)
-        json.get(jsonData, "r");
-        int r = jsonData.success ? jsonData.to<int>() : 0;
+    json.get(jsonData, "r");
+    int r = jsonData.success ? jsonData.to<int>() : 0;
 
-        // Lấy giá trị màu xanh lá (g)
-        json.get(jsonData, "g");
-        int g = jsonData.success ? jsonData.to<int>() : 0;
+    json.get(jsonData, "g");
+    int g = jsonData.success ? jsonData.to<int>() : 0;
 
-        // Lấy giá trị màu xanh dương (b)
-        json.get(jsonData, "b");
-        int b = jsonData.success ? jsonData.to<int>() : 0;
+    json.get(jsonData, "b");
+    int b = jsonData.success ? jsonData.to<int>() : 0;
 
-        selectedColor = pixels.Color(r, g, b);
-        Serial.printf("Initial Color: R=%d, G=%d, B=%d\n", r, g, b);
-    } else {
-        Serial.println("Failed to read initial color from Firebase.");
-    }
+    selectedColor = pixels.Color(r, g, b);
+  }
 }
 void setup() {
-    Serial.begin(115200);
-    pixels.begin();
-    pixels.setBrightness(200);
-    pinMode(LED_PIN, OUTPUT);
+    Serial.println("Starting...");
+  Serial.begin(115200);
+    Serial.println("1");
+  pixels.begin();
+    Serial.println("2");
+  pixels.setBrightness(brightness);
+    Serial.println("3");
+  // Khởi tạo các chân GPIO
+//  pinMode(btn_bom, INPUT);
+  pinMode(role_led, OUTPUT);
+    Serial.println("4");
+  pinMode(ena, OUTPUT);
+    Serial.println("5");
+  // pinMode(in1, OUTPUT);
+  pinMode(in2_bom, OUTPUT);
+    Serial.println("6");
+  // pinMode(latchPin, OUTPUT);
+  // pinMode(clockPin, OUTPUT);
+  // pinMode(dataPin, OUTPUT);
+    
 
-    // Kết nối WiFi
-    if (initWifi()) {
-        delay(2000);  // Chờ WiFi ổn định
-        syncTime();   // Đồng bộ hóa thời gian
-        initFirebase();
-
-        // Cập nhật dữ liệu từ Firebase lần đầu tiên
-        _syncDataFromFirebase();
-    } else {
-        Serial.println("Cannot proceed without WiFi connection.");
-        while (1) {
-            delay(1000);
-        }
+  // Kết nối WiFi và Firebase
+  if (initWifi()) {
+    Serial.println("WiFi connected");
+    delay(2000);
+    initFirebase();
+    Serial.println("Firebase connected");
+    _syncDataFromFirebase();  // Đồng bộ dữ liệu ban đầu
+  } else {
+    Serial.println("Cannot proceed without WiFi connection.");
+    while (1) {
+      delay(1000);
     }
+  }
+    Serial.println("setup done");
 }
 
 void loop() {
-    if (Firebase.ready()) {
-        // Kiểm tra stream
-        if (Firebase.RTDB.readStream(&fbdo)) {
-            if (fbdo.streamAvailable()) {
-                String eventType = fbdo.eventType();
-                String path = fbdo.dataPath();
+  delay(10);
+  if (Firebase.ready()) {
+    if (Firebase.RTDB.readStream(&fbdo)) {
+      if (fbdo.streamAvailable()) {
+          Serial.println("streamAvailable");
+        String path = fbdo.dataPath();
 
-                // Xử lý dữ liệu theo đường dẫn
-                if (path == "/currentEffect") {
-                    currentEffect = fbdo.intData();
-                    Serial.printf("Effect changed to: %d\n", currentEffect);
-                } else if (path == "/brightness") {
-                    brightness = fbdo.intData();
-                    pixels.setBrightness(brightness);
-                    Serial.printf("Brightness set to: %d\n", brightness);
-                } else if (path == "/speed") {
-                    speed = fbdo.intData();
-                    Serial.printf("Speed set to: %d\n", speed);
-                } else if (path == "/color") {
-                    FirebaseJson json = fbdo.jsonObject();
-                    FirebaseJsonData jsonData;
+        if (path == "/aquarium/waterPump") {
+          is_bom = fbdo.boolData();
+            Serial.println("is_bom");
+            Serial.println(is_bom);
+          digitalWrite(in2_bom, is_bom ? HIGH : LOW);
+        } else if (path == "/aquarium/bigLight") {
+          is_led = fbdo.boolData();
+            Serial.println("is_led");
+            Serial.println(is_led);
+          digitalWrite(role_led, is_led ? HIGH : LOW);
+        } else if (path == "/aquarium/airPumpSpeed") {
+          airPumpSpeed = fbdo.intData();
+            Serial.println("airPumpSpeed");
+            Serial.println(airPumpSpeed);
+          analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+        } else if (path == "/led/currentEffect") {
+          currentEffect = fbdo.intData();
+            Serial.println("currentEffect");
+            Serial.println(currentEffect);
+        } else if (path == "/led/brightness") {
+          brightness = fbdo.intData();
+            Serial.println("brightness");
+            Serial.println(brightness);
+          pixels.setBrightness(brightness);
+        } else if (path == "/led/speed") {
+          speed = fbdo.intData();
+            Serial.println("speed led");
+            Serial.println(speed);
+        } else if (path == "/led/color") {
+          FirebaseJson json = fbdo.jsonObject();
+          FirebaseJsonData jsonData;
 
-                    // Lấy giá trị màu đỏ (r)
-                    json.get(jsonData, "r");
-                    int r = jsonData.success ? jsonData.to<int>() : 0;
+          json.get(jsonData, "r");
+          int r = jsonData.success ? jsonData.to<int>() : 0;
 
-                    // Lấy giá trị màu xanh lá (g)
-                    json.get(jsonData, "g");
-                    int g = jsonData.success ? jsonData.to<int>() : 0;
+          json.get(jsonData, "g");
+          int g = jsonData.success ? jsonData.to<int>() : 0;
 
-                    // Lấy giá trị màu xanh dương (b)
-                    json.get(jsonData, "b");
-                    int b = jsonData.success ? jsonData.to<int>() : 0;
+          json.get(jsonData, "b");
+          int b = jsonData.success ? jsonData.to<int>() : 0;
 
-                    selectedColor = pixels.Color(r, g, b);
-                    Serial.printf("Color set to: R=%d, G=%d, B=%d\n", r, g, b);
-                }
-            }
-        } else {
-            Serial.printf("Stream error: %s\n", fbdo.errorReason().c_str());
+          selectedColor = pixels.Color(r, g, b);
+            Serial.println("color");
+            Serial.println(selectedColor);
         }
+      }
     }
+  }
 
-    // Giới hạn hiệu ứng trong phạm vi hợp lệ
-    if (currentEffect > totalEffects) {
-        currentEffect = 0;
-    }
+  // // Giới hạn hiệu ứng trong phạm vi hợp lệ
+  // if (currentEffect > totalEffects) {
+  //     currentEffect = 0;
+  // }
+  // Điều khiển LED và máy bơm
+  // Thực thi hiệu ứng
+  switch (currentEffect) {
+    case 0:
+      tatDen();
+      break;
+    case 1:
+      pixels.setBrightness(brightness);
+      //Hiệu ứng xoay vòng (Rotating Colors) (câu vòng)
+      rotatingColors(speed / 5);
+      break;
+    case 2:
+      pixels.setBrightness(brightness);
+      nhipDap(speed / 10);
+      break;
+    case 3:
+      pixels.setBrightness(brightness);
+      nhipDapWithColor(speed / 10);
+      break;
+    case 4:
+      pixels.setBrightness(brightness);
+      nuocChay(selectedColor, speed);
+      break;
+    case 5:
+      pixels.setBrightness(brightness);
+      muaRoi(speed, 3);
+      break;
+    case 6:
+      //Hiệu ứng nhấp nháy ngẫu nhiên (Random Blink)
+      pixels.setBrightness(brightness);
+      randomBlink(speed);
+      break;
+    case 7:
+      // Hiệu ứng lấp lánh theo màu
+      pixels.setBrightness(brightness);
+      strobeEffect(selectedColor, speed);
+      break;
 
-    // Thực thi hiệu ứng
-    switch (currentEffect) {
-        case 0:
-            tatDen();
-            break;
-        case 1:
-            pixels.setBrightness(brightness);
-            //Hiệu ứng xoay vòng (Rotating Colors) (câu vòng)
-            rotatingColors(speed/5);
-            break;
-        case 2:
-            pixels.setBrightness(brightness);
-            nhipDap(speed / 10);
-            break;
-        case 3:
-            pixels.setBrightness(brightness);
-            nhipDapWithColor(speed / 10);
-            break;
-        case 4:
-            pixels.setBrightness(brightness);
-            nuocChay(selectedColor, speed);
-            break;
-        case 5:
-            pixels.setBrightness(brightness);
-            muaRoi(speed, 3);
-            break;
-        case 6:
-            //Hiệu ứng nhấp nháy ngẫu nhiên (Random Blink)
-            pixels.setBrightness(brightness);
-            randomBlink(speed);
-            break;
-        case 7:
-            // Hiệu ứng lấp lánh theo màu
-            pixels.setBrightness(brightness);
-            strobeEffect(selectedColor, speed);
-            break;
-
-        case 8:
-            // Hiệu ứng đuổi màu (Chase Effect)
-            pixels.setBrightness(brightness);
-            chaseEffect(selectedColor, speed);
-            break;
-    }
-    pixels.setBrightness(brightness);
+    case 8:
+      // Hiệu ứng đuổi màu (Chase Effect)
+      pixels.setBrightness(brightness);
+      chaseEffect(selectedColor, speed);
+      break;
+  }
+  pixels.setBrightness(brightness);
 }
-
 // Hiệu ứng lấp đầy màu
 void nuocChay(uint32_t color, int wait) {
-    for (int i = pixels.numPixels(); i >= 0; i--) {
-        pixels.setPixelColor(i, color);
-        pixels.show();
-        delay(wait);
-    }
-    for (int i = pixels.numPixels(); i >= 0; i--) {
-        pixels.setPixelColor(i, 0);
-        pixels.show();
-        delay(wait);
-    }
+  for (int i = pixels.numPixels(); i >= 0; i--) {
+    pixels.setPixelColor(i, color);
+    pixels.show();
+    delay(wait);
+  }
+  for (int i = pixels.numPixels(); i >= 0; i--) {
+    pixels.setPixelColor(i, 0);
+    pixels.show();
+    delay(wait);
+  }
 }
 
 // Hiệu ứng lấp lánh
 // wait: thời gian chờ
 // iterations: số lần lặp
 void muaRoi(int speed, int iterations) {
-    for (int iter = 0; iter < iterations; iter++) {
-        // Hiệu ứng từ phải sang trái
-        for (int i = NUMPIXELS - 1; i >= 0; i--) {
-            int rgb1 = random(255);
-            int rgb2 = random(255);
-            int rgb3 = random(255);
+  for (int iter = 0; iter < iterations; iter++) {
+    // Hiệu ứng từ phải sang trái
+    for (int i = NUMPIXELS - 1; i >= 0; i--) {
+      int rgb1 = random(255);
+      int rgb2 = random(255);
+      int rgb3 = random(255);
 
-            // Bật pixel với màu ngẫu nhiên
-            pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
-            pixels.show();
-            delay(speed); // Điều chỉnh tốc độ
+      // Bật pixel với màu ngẫu nhiên
+      pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
+      pixels.show();
+      delay(speed);  // Điều chỉnh tốc độ
 
-            // Tắt pixel
-            pixels.setPixelColor(i, pixels.Color(0, 0, 0));
-        }
-
-        // Hiệu ứng từ trái sang phải
-        for (int i = 0; i < NUMPIXELS; i++) {
-            int rgb1 = random(255);
-            int rgb2 = random(255);
-            int rgb3 = random(255);
-
-            // Bật pixel với màu ngẫu nhiên
-            pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
-            pixels.show();
-            delay(speed); // Điều chỉnh tốc độ
-
-            // Tắt pixel
-            pixels.setPixelColor(i, pixels.Color(0, 0, 0));
-        }
+      // Tắt pixel
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
     }
+
+    // Hiệu ứng từ trái sang phải
+    for (int i = 0; i < NUMPIXELS; i++) {
+      int rgb1 = random(255);
+      int rgb2 = random(255);
+      int rgb3 = random(255);
+
+      // Bật pixel với màu ngẫu nhiên
+      pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
+      pixels.show();
+      delay(speed);  // Điều chỉnh tốc độ
+
+      // Tắt pixel
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+    }
+  }
 }
 
 // Hiệu ứng nhịp đập
 void nhipDap(int speed) {
-    int rgb1 = random(255);
-    int rgb2 = random(255);
-    int rgb3 = random(255);
-    uint32_t color = pixels.Color(rgb1, rgb2, rgb3);
+  int rgb1 = random(255);
+  int rgb2 = random(255);
+  int rgb3 = random(255);
+  uint32_t color = pixels.Color(rgb1, rgb2, rgb3);
 
-    // Tăng độ sáng
-    for (int j = 0; j < 255; j++) {
-        pixels.fill(color, 0, NUMPIXELS);
-        pixels.setBrightness(j);
-        pixels.show();
-        delay(speed); // Sử dụng speed để điều chỉnh tốc độ
-    }
+  // Tăng độ sáng
+  for (int j = 0; j < 255; j++) {
+    pixels.fill(color, 0, NUMPIXELS);
+    pixels.setBrightness(j);
+    pixels.show();
+    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+  }
 
-    // Giảm độ sáng
-    for (int j = 255; j >= 0; j--) {
-        pixels.fill(color, 0, NUMPIXELS);
-        pixels.setBrightness(j);
-        pixels.show();
-        delay(speed); // Sử dụng speed để điều chỉnh tốc độ
-    }
+  // Giảm độ sáng
+  for (int j = 255; j >= 0; j--) {
+    pixels.fill(color, 0, NUMPIXELS);
+    pixels.setBrightness(j);
+    pixels.show();
+    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+  }
 }
 
 void nhipDapWithColor(int speed) {
-    // Tăng độ sáng
-    for (int j = 0; j < 255; j++) {
-        pixels.fill(selectedColor, 0, NUMPIXELS);
-        pixels.setBrightness(j);
-        pixels.show();
-        delay(speed); // Sử dụng speed để điều chỉnh tốc độ
-    }
+  // Tăng độ sáng
+  for (int j = 0; j < 255; j++) {
+    pixels.fill(selectedColor, 0, NUMPIXELS);
+    pixels.setBrightness(j);
+    pixels.show();
+    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+  }
 
-    // Giảm độ sáng
-    for (int j = 255; j >= 0; j--) {
-        pixels.fill(selectedColor, 0, NUMPIXELS);
-        pixels.setBrightness(j);
-        pixels.show();
-        delay(speed); // Sử dụng speed để điều chỉnh tốc độ
-    }
+  // Giảm độ sáng
+  for (int j = 255; j >= 0; j--) {
+    pixels.fill(selectedColor, 0, NUMPIXELS);
+    pixels.setBrightness(j);
+    pixels.show();
+    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+  }
 }
 
 // tắt đèn
 void tatDen() {
-    pixels.clear();
-    pixels.show();
+  pixels.clear();
+  pixels.show();
 }
 
 //Hiệu ứng xoay vòng (Rotating Colors)
 void rotatingColors(int wait) {
-    static uint8_t hue = 0;
-    for (int i = 0; i < pixels.numPixels(); i++) {
-        pixels.setPixelColor(i, Wheel((hue + i * 256 / pixels.numPixels()) & 255));
-    }
-    pixels.show();
-    hue++;
-    delay(wait);
+  static uint8_t hue = 0;
+  for (int i = 0; i < pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, Wheel((hue + i * 256 / pixels.numPixels()) & 255));
+  }
+  pixels.show();
+  hue++;
+  delay(wait);
 }
 
 //Hiệu ứng nhấp nháy ngẫu nhiên (Random Blink)
 void randomBlink(int wait) {
-    for (int i = 0; i < pixels.numPixels(); i++) {
-        pixels.setPixelColor(i, pixels.Color(random(255), random(255), random(255)));
-    }
-    pixels.show();
-    delay(wait);
-    pixels.clear();
-    pixels.show();
-    delay(wait);
+  for (int i = 0; i < pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, pixels.Color(random(255), random(255), random(255)));
+  }
+  pixels.show();
+  delay(wait);
+  pixels.clear();
+  pixels.show();
+  delay(wait);
 }
 
 // Hiệu ứng đuổi màu (Chase Effect)
 void chaseEffect(uint32_t color, int wait) {
-    for (int i = 0; i < pixels.numPixels(); i++) {
-        pixels.setPixelColor(i, color);
-        pixels.show();
-        delay(wait);
-        pixels.setPixelColor(i, 0);
-    }
+  for (int i = 0; i < pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, color);
+    pixels.show();
+    delay(wait);
+    pixels.setPixelColor(i, 0);
+  }
 }
 
 // Hiệu ứng lấp lánh theo nhịp (Strobe Effect)
 void strobeEffect(uint32_t color, int wait) {
 
-    pixels.fill(color, 0, NUMPIXELS);
-    pixels.show();
-    delay(wait);
-    pixels.clear();
-    pixels.show();
-    delay(wait);
+  pixels.fill(color, 0, NUMPIXELS);
+  pixels.show();
+  delay(wait);
+  pixels.clear();
+  pixels.show();
+  delay(wait);
 }
 
 // Hàm hỗ trợ cho hiệu ứng cầu vồng
 uint32_t Wheel(byte WheelPos) {
-    WheelPos = 255 - WheelPos;
-    if (WheelPos < 85) {
-        return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-    }
-    if (WheelPos < 170) {
-        WheelPos -= 85;
-        return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-    }
-    WheelPos -= 170;
-    return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  WheelPos = 255 - WheelPos;
+  if (WheelPos < 85) {
+    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if (WheelPos < 170) {
+    WheelPos -= 85;
+    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }

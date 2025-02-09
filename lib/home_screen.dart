@@ -3,6 +3,7 @@ import 'package:rgbs/widgets/custom_drawer.dart';
 import 'package:rgbs/widgets/bottom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:rgbs/led_controller.dart';
+import 'package:rgbs/aquarium_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return LedController();
       case 1:
-        // return ;
+        return AquariumManager();
       default:
         return LedController();
     }

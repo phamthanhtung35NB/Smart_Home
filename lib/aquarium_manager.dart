@@ -1,0 +1,148 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+class AquariumManager extends StatefulWidget {
+  @override
+  _AquariumManagerState createState() => _AquariumManagerState();
+}
+
+class _AquariumManagerState extends State<AquariumManager> {
+  final DatabaseReference _database = FirebaseDatabase.instance.ref();
+
+  bool _bigLight = false;
+  bool _waterPump = false;
+  double _airPumpSpeed = 0.0;
+
+  void _syncDataFromFirebase() async {
+    final bigLightSnapshot = await _database.child('aquarium/bigLight').once();
+    if (bigLightSnapshot.snapshot.value != null) {
+      setState(() {
+        _bigLight = bigLightSnapshot.snapshot.value as bool;
+      });
+    }
+
+    final waterPumpSnapshot = await _database.child('aquarium/waterPump').once();
+    if (waterPumpSnapshot.snapshot.value != null) {
+      setState(() {
+        _waterPump = waterPumpSnapshot.snapshot.value as bool;
+      });
+    }
+
+    final airPumpSpeedSnapshot = await _database.child('aquarium/airPumpSpeed').once();
+    if (airPumpSpeedSnapshot.snapshot.value != null) {
+      setState(() {
+        _airPumpSpeed = (airPumpSpeedSnapshot.snapshot.value as num).toDouble();
+      });
+    }
+  }
+
+  void _updateDatabase(String key, dynamic value) {
+    _database.child('aquarium/$key').set(value);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDataFromFirebase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Aquarium Manager'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            buildSectionCard(
+              'Big Light',
+              Icon(Icons.lightbulb, color: _bigLight ? Colors.yellow : Colors.grey),
+              Switch(
+                value: _bigLight,
+                onChanged: (value) {
+                  setState(() {
+                    _bigLight = value;
+                    _updateDatabase('bigLight', value);
+                  });
+                },
+              ),
+            ),
+            buildSectionCard(
+              'Water Pump',
+              Icon(Icons.water_drop, color: _waterPump ? Colors.blue : Colors.grey),
+              Switch(
+                value: _waterPump,
+                onChanged: (value) {
+                  setState(() {
+                    _waterPump = value;
+                    _updateDatabase('waterPump', value);
+                  });
+                },
+              ),
+            ),
+            buildSectionCard(
+              'Air Pump Speed',
+              Icon(Icons.air, color: Theme.of(context).primaryColor),
+              Slider(
+                value: _airPumpSpeed,
+                min: 0,
+                max: 100,
+                divisions: 100,
+                label: _airPumpSpeed.round().toString(),
+                onChanged: (value) {
+                  setState(() {
+                    _airPumpSpeed = value;
+                    _updateDatabase('airPumpSpeed', value.toInt());
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildSectionCard(String title, Icon icon, Widget content) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 20),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              icon,
+              SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          content,
+        ],
+      ),
+    );
+  }
+}
