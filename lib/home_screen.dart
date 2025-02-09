@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rgbs/widgets/custom_drawer.dart';
 import 'package:rgbs/widgets/bottom_app_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/led_controller.dart';
 import 'package:rgbs/aquarium_manager.dart';
 
@@ -33,9 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-      ),
+      appBar: AppBarScreen(title: 'Smart Home'),
       drawer: CustomDrawer(),
       body: _getSelectedScreen(),
       bottomNavigationBar: BottomAppBarWidget(onTabSelected: _onTabSelected),

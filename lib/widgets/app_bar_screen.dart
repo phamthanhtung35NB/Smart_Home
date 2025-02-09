@@ -8,7 +8,9 @@ class AppBarScreen extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(title),
+      backgroundColor: Colors.blue,
+      elevation: 0,
+      title: Text(title, style: TextStyle(color: Colors.white)),
       centerTitle: true,
     );
   }

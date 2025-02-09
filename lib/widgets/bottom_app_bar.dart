@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
           return ConvexAppBar(
             style: TabStyle.reactCircle,
             items: [
-              TabItem(icon: Icons.location_disabled, title: 'List Lecturers'),
-              TabItem(icon: Icons.home, title: 'Home'),
+              TabItem(icon: Icons.light, title: 'Led Controller'),
+              TabItem(icon: Icons.pets, title: 'Aquarium Manager'),
             ],
             initialActiveIndex: 0,
             onTap: onTabSelected,

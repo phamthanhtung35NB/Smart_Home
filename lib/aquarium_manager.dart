@@ -49,9 +49,9 @@ class _AquariumManagerState extends State<AquariumManager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Aquarium Manager'),
-      ),
+      // appBar: AppBar(
+      //   title: Text('Aquarium Manager'),
+      // ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
