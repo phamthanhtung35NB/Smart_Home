@@ -81,55 +81,7 @@ void initFirebase() {
         Serial.println("Firebase stream initialized successfully.");
     }
 }
-void _syncDataFromFirebase() {
-    // Đọc currentEffect
-    if (Firebase.RTDB.getInt(&fbdo, "/currentEffect")) {
-        currentEffect = fbdo.intData();
-        Serial.printf("Initial Effect: %d\n", currentEffect);
-    } else {
-        Serial.println("Failed to read initial effect from Firebase.");
-    }
 
-    // Đọc brightness
-    if (Firebase.RTDB.getInt(&fbdo, "/brightness")) {
-        brightness = fbdo.intData();
-        pixels.setBrightness(brightness);
-        Serial.printf("Initial Brightness: %d\n", brightness);
-    } else {
-        Serial.println("Failed to read initial brightness from Firebase.");
-    }
-
-    // Đọc speed
-    if (Firebase.RTDB.getInt(&fbdo, "/speed")) {
-        speed = fbdo.intData();
-        Serial.printf("Initial Speed: %d\n", speed);
-    } else {
-        Serial.println("Failed to read initial speed from Firebase.");
-    }
-
-    // Đọc color
-    if (Firebase.RTDB.getJSON(&fbdo, "/color")) {
-        FirebaseJson json = fbdo.jsonObject();
-        FirebaseJsonData jsonData;
-
-        // Lấy giá trị màu đỏ (r)
-        json.get(jsonData, "r");
-        int r = jsonData.success ? jsonData.to<int>() : 0;
-
-        // Lấy giá trị màu xanh lá (g)
-        json.get(jsonData, "g");
-        int g = jsonData.success ? jsonData.to<int>() : 0;
-
-        // Lấy giá trị màu xanh dương (b)
-        json.get(jsonData, "b");
-        int b = jsonData.success ? jsonData.to<int>() : 0;
-
-        selectedColor = pixels.Color(r, g, b);
-        Serial.printf("Initial Color: R=%d, G=%d, B=%d\n", r, g, b);
-    } else {
-        Serial.println("Failed to read initial color from Firebase.");
-    }
-}
 void setup() {
     Serial.begin(115200);
     pixels.begin();
