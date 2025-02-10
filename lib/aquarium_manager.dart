@@ -58,7 +58,7 @@ class _AquariumManagerState extends State<AquariumManager> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             buildSectionCard(
-              'Big Light',
+              'Đèn hồ cá',
               Icon(Icons.lightbulb, color: _bigLight ? Colors.yellow : Colors.grey),
               Switch(
                 value: _bigLight,
@@ -71,7 +71,7 @@ class _AquariumManagerState extends State<AquariumManager> {
               ),
             ),
             buildSectionCard(
-              'Water Pump',
+              'Bơm Khí',
               Icon(Icons.water_drop, color: _waterPump ? Colors.blue : Colors.grey),
               Switch(
                 value: _waterPump,
@@ -84,7 +84,7 @@ class _AquariumManagerState extends State<AquariumManager> {
               ),
             ),
             buildSectionCard(
-              'Air Pump Speed',
+              'Tốc độ bơm khí',
               Icon(Icons.air, color: Theme.of(context).primaryColor),
               Slider(
                 value: _airPumpSpeed,

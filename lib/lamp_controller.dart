@@ -47,7 +47,7 @@ class _LampControllerState extends State<LampController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionCard(
-              'Lamp Status',
+              'Đèn bàn',
               Icon(Icons.lightbulb, color: _lampStatus ? Colors.yellow : Colors.grey),
               Switch(
                 value: _lampStatus,
@@ -60,8 +60,8 @@ class _LampControllerState extends State<LampController> {
               ),
             ),
             _buildSectionCard(
-              'Lamp Level',
-              Icon(Icons.wb_sunny, color: Theme.of(context).primaryColor),
+              'Tăng cường độ sáng',
+              Icon(Icons.brightness_6, color: _lampLevel ? Colors.yellow : Colors.grey),
               Switch(
                 value: _lampLevel,
                 onChanged: (value) {

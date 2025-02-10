@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
             items: [
               TabItem(icon: Icons.light, title: 'Led RGB'),
               TabItem(icon: Icons.pets, title: 'Bể cá'),
-              TabItem(icon: Icons.lightbulb, title: 'Đèn bàn'),
+              TabItem(icon: Icons.lightbulb, title: ''),
             ],
             initialActiveIndex: 0,
             onTap: onTabSelected,
