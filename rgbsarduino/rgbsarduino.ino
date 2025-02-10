@@ -21,16 +21,25 @@ int speed = 50;                                    // Tốc độ mặc định
 uint32_t selectedColor = pixels.Color(255, 0, 0);  // Màu mặc định (đỏ)
 int currentEffect = 0;                             // Hiệu ứng hiện tại
 
-bool is_bom = true;                                // Trạng thái máy bơm
-bool is_led = true;                                // Trạng thái đèn lớn
-int airPumpSpeed = 5;                              // Tốc độ máy bơm khí
+bool is_bom = true;    // Trạng thái máy bơm
+bool is_led = true;    // Trạng thái đèn lớn
+int airPumpSpeed = 5;  // Tốc độ máy bơm khí
 
 // Các chân GPIO
-// const int btn_bom = 9;  
+// const int btn_bom = 9;
 const int ena = 5;  // PWM
 // const int in1 = 4;
 const int in2_bom = 18;  // Điều khiển máy bơm
-const int role_led = 19; // Điều khiển đèn lớn
+
+
+const int role_led = 19;  // Điều khiển đèn lớn
+
+
+const int lamp = 21;
+const int levelLampHigh = 22;
+
+bool lampState = true;
+bool levelLampHighState = true;
 // const int latchPin = 10;
 // const int clockPin = 12;
 // const int dataPin = 11;
@@ -118,6 +127,14 @@ void initFirebase() {
   }
 }
 void _syncDataFromFirebase() {
+
+  if (Firebase.RTDB.getBool(&fbdo, "/lamp/status")) {
+    lampState = fbdo.boolData();
+  }
+  if (Firebase.RTDB.getBool(&fbdo, "/lamp/level")) {
+    levelLampHighState = fbdo.boolData();
+  }
+  updateLamp();
   // Đọc trạng thái máy bơm
   if (Firebase.RTDB.getBool(&fbdo, "/aquarium/waterPump")) {
     is_bom = fbdo.boolData();
@@ -164,26 +181,32 @@ void _syncDataFromFirebase() {
   }
 }
 void setup() {
-    Serial.println("Starting...");
+  Serial.println("Starting...");
   Serial.begin(115200);
-    Serial.println("1");
+  Serial.println("1");
   pixels.begin();
-    Serial.println("2");
+  Serial.println("2");
   pixels.setBrightness(brightness);
-    Serial.println("3");
+  Serial.println("3");
   // Khởi tạo các chân GPIO
-//  pinMode(btn_bom, INPUT);
+  //  pinMode(btn_bom, INPUT);
   pinMode(role_led, OUTPUT);
-    Serial.println("4");
+  digitalWrite(role_led, HIGH);
+  Serial.println("4");
   pinMode(ena, OUTPUT);
-    Serial.println("5");
+  Serial.println("5");
   // pinMode(in1, OUTPUT);
   pinMode(in2_bom, OUTPUT);
-    Serial.println("6");
+  Serial.println("6");
+  pinMode(lamp, OUTPUT);
+  digitalWrite(lamp, HIGH);
+  Serial.println("7");
+  pinMode(levelLampHigh, OUTPUT);
+    digitalWrite(levelLampHigh, HIGH);
   // pinMode(latchPin, OUTPUT);
   // pinMode(clockPin, OUTPUT);
   // pinMode(dataPin, OUTPUT);
-    
+
 
   // Kết nối WiFi và Firebase
   if (initWifi()) {
@@ -198,45 +221,68 @@ void setup() {
       delay(1000);
     }
   }
-    Serial.println("setup done");
+  Serial.println("setup done");
 }
+void updateLamp() {
+  if (lampState == true) {
+    digitalWrite(lamp, LOW);  // Tắt đèn
+  } else {
 
+    digitalWrite(lamp, HIGH);  // Bật đèn
+  }
+  if (levelLampHighState == true) {
+
+    digitalWrite(levelLampHigh, LOW);  // Tắt đèn
+  } else {
+    digitalWrite(levelLampHigh, HIGH);  // Bật đèn
+  }
+}
 void loop() {
   delay(10);
   if (Firebase.ready()) {
     if (Firebase.RTDB.readStream(&fbdo)) {
       if (fbdo.streamAvailable()) {
-          Serial.println("streamAvailable");
+        Serial.println("streamAvailable");
         String path = fbdo.dataPath();
-
+        if (path == "/lamp/status") {
+          lampState = fbdo.boolData();
+          Serial.println("lampState");
+          Serial.println(lampState);
+          updateLamp();
+        } else if (path == "/lamp/level") {
+          levelLampHighState = fbdo.boolData();
+          Serial.println("levelLampHighState");
+          Serial.println(levelLampHighState);
+          updateLamp();
+        }
         if (path == "/aquarium/waterPump") {
           is_bom = fbdo.boolData();
-            Serial.println("is_bom");
-            Serial.println(is_bom);
+          Serial.println("is_bom");
+          Serial.println(is_bom);
           digitalWrite(in2_bom, is_bom ? HIGH : LOW);
         } else if (path == "/aquarium/bigLight") {
           is_led = fbdo.boolData();
-            Serial.println("is_led");
-            Serial.println(is_led);
+          Serial.println("is_led");
+          Serial.println(is_led);
           digitalWrite(role_led, is_led ? HIGH : LOW);
         } else if (path == "/aquarium/airPumpSpeed") {
           airPumpSpeed = fbdo.intData();
-            Serial.println("airPumpSpeed");
-            Serial.println(airPumpSpeed);
+          Serial.println("airPumpSpeed");
+          Serial.println(airPumpSpeed);
           analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
         } else if (path == "/led/currentEffect") {
           currentEffect = fbdo.intData();
-            Serial.println("currentEffect");
-            Serial.println(currentEffect);
+          Serial.println("currentEffect");
+          Serial.println(currentEffect);
         } else if (path == "/led/brightness") {
           brightness = fbdo.intData();
-            Serial.println("brightness");
-            Serial.println(brightness);
+          Serial.println("brightness");
+          Serial.println(brightness);
           pixels.setBrightness(brightness);
         } else if (path == "/led/speed") {
           speed = fbdo.intData();
-            Serial.println("speed led");
-            Serial.println(speed);
+          Serial.println("speed led");
+          Serial.println(speed);
         } else if (path == "/led/color") {
           FirebaseJson json = fbdo.jsonObject();
           FirebaseJsonData jsonData;
@@ -251,8 +297,8 @@ void loop() {
           int b = jsonData.success ? jsonData.to<int>() : 0;
 
           selectedColor = pixels.Color(r, g, b);
-            Serial.println("color");
-            Serial.println(selectedColor);
+          Serial.println("color");
+          Serial.println(selectedColor);
         }
       }
     }

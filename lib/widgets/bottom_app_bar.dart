@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
             items: [
               TabItem(icon: Icons.light, title: 'Led Controller'),
               TabItem(icon: Icons.pets, title: 'Aquarium Manager'),
+              TabItem(icon: Icons.lightbulb, title: 'Lamp Controller'),
             ],
             initialActiveIndex: 0,
             onTap: onTabSelected,

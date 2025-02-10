@@ -22,7 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return AquariumManager();
       case 2:
-        return LampController();
       default:
         return LedController();
     }
