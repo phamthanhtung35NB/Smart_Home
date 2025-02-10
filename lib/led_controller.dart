@@ -193,7 +193,7 @@ class _LedControllerState extends State<LedController> {
                     ],
                   ),
                 ),
-                _buildSectionCard(
+                _buildSectionCard2(
                   'Màu sắc',
                   Icon(Icons.color_lens, color: Theme.of(context).primaryColor),
                   Center(
@@ -218,14 +218,14 @@ class _LedControllerState extends State<LedController> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Nhấn để chọn màu',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
+                        // SizedBox(height: 8),
+                        // Text(
+                        //   'Nhấn để chọn màu',
+                        //   style: TextStyle(
+                        //     fontSize: 14,
+                        //     color: Colors.grey.shade600,
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -277,6 +277,34 @@ class _LedControllerState extends State<LedController> {
       ),
     );
   }
+  Widget _buildSectionCard2(String title, Widget leading, Widget trailing) {
+    return Card(
+      color: Colors.white, // Đặt nền trắng
+      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
+      ),
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                leading,
+                SizedBox(width: 10),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+
 
   void _showColorPicker(BuildContext context) {
     showDialog(

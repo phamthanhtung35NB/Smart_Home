@@ -47,7 +47,7 @@ class _LampControllerState extends State<LampController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionCard(
-              'Lamp Status',
+              'Đèn bàn',
               Icon(Icons.lightbulb, color: _lampStatus ? Colors.yellow : Colors.grey),
               Switch(
                 value: _lampStatus,
@@ -60,7 +60,7 @@ class _LampControllerState extends State<LampController> {
               ),
             ),
             _buildSectionCard(
-              'Lamp Level',
+              'Tăng cường ánh sáng',
               Icon(Icons.wb_sunny, color: Theme.of(context).primaryColor),
               Switch(
                 value: _lampLevel,
@@ -77,44 +77,32 @@ class _LampControllerState extends State<LampController> {
       ),
     );
   }
-
-  Widget _buildSectionCard(String title, Icon icon, Widget content) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 20),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+  Widget _buildSectionCard(String title, Widget leading, Widget trailing) {
+    return Card(
+      color: Colors.white, // Đặt nền trắng
+      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              icon,
-              SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-          content,
-        ],
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                leading,
+                SizedBox(width: 10),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            trailing,
+          ],
+        ),
       ),
     );
   }
+
+
 }

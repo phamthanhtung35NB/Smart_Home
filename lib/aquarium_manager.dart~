@@ -49,16 +49,16 @@ class _AquariumManagerState extends State<AquariumManager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Aquarium Manager'),
-      ),
+      // appBar: AppBar(
+      //   title: Text('Aquarium Manager'),
+      // ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            buildSectionCard(
-              'Big Light',
+            buildSectionCard2(
+              'Đèn hồ cá',
               Icon(Icons.lightbulb, color: _bigLight ? Colors.yellow : Colors.grey),
               Switch(
                 value: _bigLight,
@@ -70,8 +70,9 @@ class _AquariumManagerState extends State<AquariumManager> {
                 },
               ),
             ),
-            buildSectionCard(
-              'Water Pump',
+
+            buildSectionCard2(
+              'Bơm không khí',
               Icon(Icons.water_drop, color: _waterPump ? Colors.blue : Colors.grey),
               Switch(
                 value: _waterPump,
@@ -84,8 +85,10 @@ class _AquariumManagerState extends State<AquariumManager> {
               ),
             ),
             buildSectionCard(
-              'Air Pump Speed',
+              'Tốc độ bơm không khí',
               Icon(Icons.air, color: Theme.of(context).primaryColor),
+              Column(
+                children: [
               Slider(
                 value: _airPumpSpeed,
                 min: 0,
@@ -98,6 +101,15 @@ class _AquariumManagerState extends State<AquariumManager> {
                     _updateDatabase('airPumpSpeed', value.toInt());
                   });
                 },
+              ),Text(
+              '${_airPumpSpeed.round()}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+                ],
               ),
             ),
           ],
@@ -145,4 +157,31 @@ class _AquariumManagerState extends State<AquariumManager> {
       ),
     );
   }
+  Widget buildSectionCard(String title, Widget leading, Widget trailing) {
+    return Card(
+      color: Colors.white, // Đặt nền trắng
+      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
+      ),
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                leading,
+                SizedBox(width: 10),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
 }
