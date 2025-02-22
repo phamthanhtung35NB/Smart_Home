@@ -4,6 +4,13 @@
 #include <addons/TokenHelper.h>
 #include <time.h>
 #include "config.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define ONE_WIRE_BUS 23
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+float lastTemperature = -127.00; // Initialize with an invalid tempe
 
 // Cấu hình Firebase
 FirebaseConfig configF;
@@ -192,7 +199,6 @@ void setup() {
   //  pinMode(btn_bom, INPUT);
   pinMode(role_led, OUTPUT);
   digitalWrite(role_led, HIGH);
-  di
   Serial.println("4");
   pinMode(ena, OUTPUT);
   Serial.println("5");
@@ -216,6 +222,8 @@ void setup() {
     initFirebase();
     Serial.println("Firebase connected");
     _syncDataFromFirebase();  // Đồng bộ dữ liệu ban đầu
+      sensors.begin(); // Start temperature sensor
+      updateTemperature(); // Push initial temperature data
   } else {
     Serial.println("Cannot proceed without WiFi connection.");
     while (1) {
@@ -238,86 +246,21 @@ void updateLamp() {
     digitalWrite(levelLampHigh, HIGH);  // Bật đèn
   }
 }
-void loop() {
-  delay(10);
-  if (Firebase.ready()) {
-    if (Firebase.RTDB.readStream(&fbdo)) {
-      if (fbdo.streamAvailable()) {
-        Serial.println("streamAvailable");
-        String path = fbdo.dataPath();
-        if (path == "/lamp/status") {
-          lampState = fbdo.boolData();
-          Serial.println("lampState");
-          Serial.println(lampState);
-          updateLamp();
-        } else if (path == "/lamp/level") {
-          levelLampHighState = fbdo.boolData();
-          Serial.println("levelLampHighState");
-          Serial.println(levelLampHighState);
-          updateLamp();
-        }
-        if (path == "/aquarium/waterPump") {
-          is_bom = fbdo.boolData();
-          Serial.println("is_bom");
-          Serial.println(is_bom);
-          digitalWrite(in2_bom, is_bom ? HIGH : LOW);
-        } else if (path == "/aquarium/bigLight") {
-          is_led = fbdo.boolData();
-          Serial.println("is_led");
-          Serial.println(is_led);
-          digitalWrite(role_led, is_led ? HIGH : LOW);
-        } else if (path == "/aquarium/airPumpSpeed") {
-          airPumpSpeed = fbdo.intData();
-          Serial.println("airPumpSpeed");
-          Serial.println(airPumpSpeed);
-          analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
-        } else if (path == "/led/currentEffect") {
-          currentEffect = fbdo.intData();
-          Serial.println("currentEffect");
-          Serial.println(currentEffect);
-        } else if (path == "/led/brightness") {
-          brightness = fbdo.intData();
-          Serial.println("brightness");
-          Serial.println(brightness);
-          pixels.setBrightness(brightness);
-        } else if (path == "/led/speed") {
-          speed = fbdo.intData();
-          Serial.println("speed led");
-          Serial.println(speed);
-        } else if (path == "/led/color") {
-          FirebaseJson json = fbdo.jsonObject();
-          FirebaseJsonData jsonData;
-
-          json.get(jsonData, "r");
-          int r = jsonData.success ? jsonData.to<int>() : 0;
-
-          json.get(jsonData, "g");
-          int g = jsonData.success ? jsonData.to<int>() : 0;
-
-          json.get(jsonData, "b");
-          int b = jsonData.success ? jsonData.to<int>() : 0;
-
-          selectedColor = pixels.Color(r, g, b);
-          Serial.println("color");
-          Serial.println(selectedColor);
-        }
-      }
-    }
+void updateTemperature() {
+  float temperature = sensors.getTempCByIndex(0);
+  if (temperature != -127.00) {
+    Firebase.RTDB.setFloat(&fbdo, "/aquarium/temperature", temperature);
+    Serial.print("Updated temperature to Firebase: ");
+    Serial.println(temperature);
   }
-
-  // // Giới hạn hiệu ứng trong phạm vi hợp lệ
-  // if (currentEffect > totalEffects) {
-  //     currentEffect = 0;
-  // }
-  // Điều khiển LED và máy bơm
-  // Thực thi hiệu ứng
+}
+void executeLEDEffects() {
   switch (currentEffect) {
     case 0:
       tatDen();
       break;
     case 1:
       pixels.setBrightness(brightness);
-      //Hiệu ứng xoay vòng (Rotating Colors) (câu vòng)
       rotatingColors(speed / 5);
       break;
     case 2:
@@ -337,23 +280,87 @@ void loop() {
       muaRoi(speed, 3);
       break;
     case 6:
-      //Hiệu ứng nhấp nháy ngẫu nhiên (Random Blink)
       pixels.setBrightness(brightness);
       randomBlink(speed);
       break;
     case 7:
-      // Hiệu ứng lấp lánh theo màu
       pixels.setBrightness(brightness);
       strobeEffect(selectedColor, speed);
       break;
-
     case 8:
-      // Hiệu ứng đuổi màu (Chase Effect)
       pixels.setBrightness(brightness);
       chaseEffect(selectedColor, speed);
       break;
   }
   pixels.setBrightness(brightness);
+}
+void handleFirebaseStream() {
+
+  String path = fbdo.dataPath();
+  if (path == "/lamp/status") {
+    lampState = fbdo.boolData();
+    updateLamp();
+  } else if (path == "/lamp/level") {
+    levelLampHighState = fbdo.boolData();
+    updateLamp();
+  } else if (path == "/aquarium/waterPump") {
+    is_bom = fbdo.boolData();
+    digitalWrite(in2_bom, is_bom ? HIGH : LOW);
+  } else if (path == "/aquarium/bigLight") {
+    is_led = fbdo.boolData();
+    digitalWrite(role_led, is_led ? HIGH : LOW);
+  } else if (path == "/aquarium/airPumpSpeed") {
+    airPumpSpeed = fbdo.intData();
+    analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+  } else if (path == "/led/currentEffect") {
+    currentEffect = fbdo.intData();
+  } else if (path == "/led/brightness") {
+    brightness = fbdo.intData();
+    pixels.setBrightness(brightness);
+  } else if (path == "/led/speed") {
+    speed = fbdo.intData();
+  } else if (path == "/led/color") {
+    FirebaseJson json = fbdo.jsonObject();
+    FirebaseJsonData jsonData;
+
+    json.get(jsonData, "r");
+    int r = jsonData.success ? jsonData.to<int>() : 0;
+
+    json.get(jsonData, "g");
+    int g = jsonData.success ? jsonData.to<int>() : 0;
+
+    json.get(jsonData, "b");
+    int b = jsonData.success ? jsonData.to<int>() : 0;
+
+    selectedColor = pixels.Color(r, g, b);
+  }
+}
+void loop() {
+    delay(10);
+    sensors.requestTemperatures();
+    float currentTemperature = sensors.getTempCByIndex(0);  // Lấy nhiệt độ từ cảm biến DS18B20 (chỉ có 1 cảm biến) 0 là chỉ số của cảm biến nhiệt độ 1
+
+    if (currentTemperature == -127.00) {
+        sensors.begin();
+        Serial.println("⚠️ Error: DS18B20 sensor not found!");
+    } else {
+        Serial.print("🌡️ Temperature: ");
+        Serial.print(currentTemperature);
+        Serial.println(" °C");
+
+        if (abs(currentTemperature - lastTemperature) > 0.1) {
+            lastTemperature = currentTemperature;
+            updateTemperature();
+        }
+    }
+  if (Firebase.ready()) {
+    if (Firebase.RTDB.readStream(&fbdo)) {
+      if (fbdo.streamAvailable()) {
+          handleFirebaseStream();
+      }
+    }
+  }
+
 }
 // Hiệu ứng lấp đầy màu
 void nuocChay(uint32_t color, int wait) {

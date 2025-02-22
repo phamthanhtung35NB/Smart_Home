@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+
 class AquariumManager extends StatefulWidget {
   @override
   _AquariumManagerState createState() => _AquariumManagerState();
@@ -12,6 +13,7 @@ class _AquariumManagerState extends State<AquariumManager> {
   bool _bigLight = false;
   bool _waterPump = false;
   double _airPumpSpeed = 0.0;
+  double _temperature = 0.0;
 
   void _syncDataFromFirebase() async {
     final bigLightSnapshot = await _database.child('aquarium/bigLight').once();
@@ -21,17 +23,27 @@ class _AquariumManagerState extends State<AquariumManager> {
       });
     }
 
-    final waterPumpSnapshot = await _database.child('aquarium/waterPump').once();
+    final waterPumpSnapshot =
+        await _database.child('aquarium/waterPump').once();
     if (waterPumpSnapshot.snapshot.value != null) {
       setState(() {
         _waterPump = waterPumpSnapshot.snapshot.value as bool;
       });
     }
 
-    final airPumpSpeedSnapshot = await _database.child('aquarium/airPumpSpeed').once();
+    final airPumpSpeedSnapshot =
+        await _database.child('aquarium/airPumpSpeed').once();
     if (airPumpSpeedSnapshot.snapshot.value != null) {
       setState(() {
         _airPumpSpeed = (airPumpSpeedSnapshot.snapshot.value as num).toDouble();
+      });
+    }
+
+    final temperatureSnapshot =
+        await _database.child('aquarium/temperature').once();
+    if (temperatureSnapshot.snapshot.value != null) {
+      setState(() {
+        _temperature = (temperatureSnapshot.snapshot.value as num).toDouble();
       });
     }
   }
@@ -49,9 +61,6 @@ class _AquariumManagerState extends State<AquariumManager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Aquarium Manager'),
-      // ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -59,7 +68,8 @@ class _AquariumManagerState extends State<AquariumManager> {
           children: [
             buildSectionCard2(
               'Đèn hồ cá',
-              Icon(Icons.lightbulb, color: _bigLight ? Colors.yellow : Colors.grey),
+              Icon(Icons.lightbulb,
+                  color: _bigLight ? Colors.yellow : Colors.grey),
               Switch(
                 value: _bigLight,
                 onChanged: (value) {
@@ -70,10 +80,10 @@ class _AquariumManagerState extends State<AquariumManager> {
                 },
               ),
             ),
-
             buildSectionCard2(
               'Bơm không khí',
-              Icon(Icons.water_drop, color: _waterPump ? Colors.blue : Colors.grey),
+              Icon(Icons.water_drop,
+                  color: _waterPump ? Colors.blue : Colors.grey),
               Switch(
                 value: _waterPump,
                 onChanged: (value) {
@@ -89,26 +99,27 @@ class _AquariumManagerState extends State<AquariumManager> {
               Icon(Icons.air, color: Theme.of(context).primaryColor),
               Column(
                 children: [
-              Slider(
-                value: _airPumpSpeed,
-                min: 0,
-                max: 100,
-                divisions: 100,
-                label: _airPumpSpeed.round().toString(),
-                onChanged: (value) {
-                  setState(() {
-                    _airPumpSpeed = value;
-                    _updateDatabase('airPumpSpeed', value.toInt());
-                  });
-                },
-              ),Text(
-              '${_airPumpSpeed.round()}',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
+                  Slider(
+                    value: _airPumpSpeed,
+                    min: 0,
+                    max: 100,
+                    divisions: 100,
+                    label: _airPumpSpeed.round().toString(),
+                    onChanged: (value) {
+                      setState(() {
+                        _airPumpSpeed = value;
+                        _updateDatabase('airPumpSpeed', value.toInt());
+                      });
+                    },
+                  ),
+                  Text(
+                    '${_airPumpSpeed.round()}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -157,12 +168,13 @@ class _AquariumManagerState extends State<AquariumManager> {
       ),
     );
   }
-  Widget buildSectionCard(String title, Widget leading, Widget trailing) {
+
+  Widget buildSectionCard2(String title, Widget leading, Widget trailing) {
     return Card(
-      color: Colors.white, // Đặt nền trắng
-      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
+      color: Colors.white,
+      elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
+        borderRadius: BorderRadius.circular(12),
       ),
       margin: EdgeInsets.symmetric(vertical: 10),
       child: Padding(
@@ -174,7 +186,9 @@ class _AquariumManagerState extends State<AquariumManager> {
               children: [
                 leading,
                 SizedBox(width: 10),
-                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(title,
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -183,5 +197,4 @@ class _AquariumManagerState extends State<AquariumManager> {
       ),
     );
   }
-
 }
