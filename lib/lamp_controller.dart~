@@ -23,7 +23,7 @@ class _LampControllerState extends State<LampController> {
     final levelSnapshot = await _database.child('lamp/level').once();
     if (levelSnapshot.snapshot.value != null) {
       setState(() {
-        _lampLevel = levelSnapshot.snapshot.value as bool;
+        _lampLevel = statusSnapshot.snapshot.value as bool;
       });
     }
   }
@@ -41,15 +41,14 @@ class _LampControllerState extends State<LampController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: Container(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionCard(
               'Đèn bàn',
-              Icon(Icons.lightbulb,
-                  color: _lampStatus ? Colors.yellow : Colors.grey),
+              Icon(Icons.lightbulb, color: _lampStatus ? Colors.yellow : Colors.grey),
               Switch(
                 value: _lampStatus,
                 onChanged: (value) {
@@ -78,13 +77,12 @@ class _LampControllerState extends State<LampController> {
       ),
     );
   }
-
   Widget _buildSectionCard(String title, Widget leading, Widget trailing) {
     return Card(
-      color: Colors.white,
-      elevation: 4,
+      color: Colors.white, // Đặt nền trắng
+      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
       ),
       margin: EdgeInsets.symmetric(vertical: 10),
       child: Padding(
@@ -96,9 +94,7 @@ class _LampControllerState extends State<LampController> {
               children: [
                 leading,
                 SizedBox(width: 10),
-                Text(title,
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -107,4 +103,6 @@ class _LampControllerState extends State<LampController> {
       ),
     );
   }
+
+
 }

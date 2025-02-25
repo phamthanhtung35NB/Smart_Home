@@ -59,13 +59,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
           title: Text('Auto Status'),
         ),
         body:Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [ Colors.white,Color.fromRGBO(33, 150, 243, 1)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          colors: [ Colors.white,Color.fromRGBO(33, 150, 243, 1)],
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

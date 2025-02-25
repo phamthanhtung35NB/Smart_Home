@@ -86,14 +86,11 @@ class _LedControllerState extends State<LedController> {
       // backgroundColor: Theme.of(context).primaryColor,
       // ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
+            colors: [ Colors.white,Color.fromRGBO(33, 150, 243, 1)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).primaryColor.withOpacity(0.1),
-              Colors.white,
-            ],
           ),
         ),
         child: SingleChildScrollView(
