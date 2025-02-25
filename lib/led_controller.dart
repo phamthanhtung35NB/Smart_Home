@@ -77,13 +77,13 @@ class _LedControllerState extends State<LedController> {
   Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(
-        // title: Text(
-        //   'LED Controller',
-        //   style: TextStyle(fontWeight: FontWeight.bold),
-        // ),
-        // elevation: 0,
-        // centerTitle: true,
-        // backgroundColor: Theme.of(context).primaryColor,
+      // title: Text(
+      //   'LED Controller',
+      //   style: TextStyle(fontWeight: FontWeight.bold),
+      // ),
+      // elevation: 0,
+      // centerTitle: true,
+      // backgroundColor: Theme.of(context).primaryColor,
       // ),
       body: Container(
         decoration: BoxDecoration(

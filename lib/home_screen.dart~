@@ -6,6 +6,7 @@ import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/led_controller.dart';
 import 'package:rgbs/aquarium_manager.dart';
 import 'package:rgbs/lamp_controller.dart';
+import 'package:rgbs/auto_status_screen.dart'; // Import the new screen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,10 +19,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _getSelectedScreen() {
     switch (_selectedIndex) {
       case 0:
-        return LedController();
+        return AutoStatusScreen(); // Add the new screen to the navigation
       case 1:
         return AquariumManager();
       case 2:
+        return LampController();
+      case 3:
+        return LedController();
       default:
         return LedController();
     }

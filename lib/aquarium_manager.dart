@@ -24,7 +24,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     }
 
     final waterPumpSnapshot =
-        await _database.child('aquarium/waterPump').once();
+    await _database.child('aquarium/waterPump').once();
     if (waterPumpSnapshot.snapshot.value != null) {
       setState(() {
         _waterPump = waterPumpSnapshot.snapshot.value as bool;
@@ -32,7 +32,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     }
 
     final airPumpSpeedSnapshot =
-        await _database.child('aquarium/airPumpSpeed').once();
+    await _database.child('aquarium/airPumpSpeed').once();
     if (airPumpSpeedSnapshot.snapshot.value != null) {
       setState(() {
         _airPumpSpeed = (airPumpSpeedSnapshot.snapshot.value as num).toDouble();
@@ -40,7 +40,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     }
 
     final temperatureSnapshot =
-        await _database.child('aquarium/temperature').once();
+    await _database.child('aquarium/temperature').once();
     if (temperatureSnapshot.snapshot.value != null) {
       setState(() {
         _temperature = (temperatureSnapshot.snapshot.value as num).toDouble();
@@ -222,7 +222,7 @@ class _AquariumManagerState extends State<AquariumManager> {
                 SizedBox(width: 10),
                 Text(title,
                     style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,

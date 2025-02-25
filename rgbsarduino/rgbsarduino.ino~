@@ -6,11 +6,19 @@
 #include "config.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
+// Cấu hình NTP
+// Thay đổi biến global
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "time.google.com", 25200, 60000);  // Sử dụng máy chủ Google NTP
+
 
 #define ONE_WIRE_BUS 23
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-float lastTemperature = -127.00; // Initialize with an invalid tempe
+float lastTemperature = -127.00;  // Initialize with an invalid tempe
 
 // Cấu hình Firebase
 FirebaseConfig configF;
@@ -98,23 +106,23 @@ bool initWifi() {
   }
 }
 
-void syncTime() {
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+// void syncTime() {
+//   configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
-  struct tm timeinfo;
-  int retry = 10;  // Số lần thử tối đa
+//   struct tm timeinfo;
+//   int retry = 10;  // Số lần thử tối đa
 
-  while (retry-- > 0) {
-    if (getLocalTime(&timeinfo)) {
-      Serial.println("Time synchronized successfully");
-      return;
-    }
-    Serial.println("Retrying time sync...");
-    delay(2000);
-  }
+//   while (retry-- > 0) {
+//     if (getLocalTime(&timeinfo)) {
+//       Serial.println("Time synchronized successfully");
+//       return;
+//     }
+//     Serial.println("Retrying time sync...");
+//     delay(2000);
+//   }
 
-  Serial.println("Failed to obtain time after multiple attempts");
-}
+//   Serial.println("Failed to obtain time after multiple attempts");
+// }
 
 
 void initFirebase() {
@@ -135,6 +143,9 @@ void initFirebase() {
 }
 void _syncDataFromFirebase() {
 
+    if(Firebase.RTDB.getBool(&fbdo, "/status/auto")) {
+    autoSystem = fbdo.boolData();
+    }
   if (Firebase.RTDB.getBool(&fbdo, "/lamp/status")) {
     lampState = fbdo.boolData();
   }
@@ -209,7 +220,7 @@ void setup() {
   digitalWrite(lamp, HIGH);
   Serial.println("7");
   pinMode(levelLampHigh, OUTPUT);
-    digitalWrite(levelLampHigh, HIGH);
+  digitalWrite(levelLampHigh, HIGH);
   // pinMode(latchPin, OUTPUT);
   // pinMode(clockPin, OUTPUT);
   // pinMode(dataPin, OUTPUT);
@@ -219,11 +230,15 @@ void setup() {
   if (initWifi()) {
     Serial.println("WiFi connected");
     delay(2000);
+    timeClient.begin();
+    timeClient.setTimeOffset(25200);  // 7 hours offset in seconds
+    timeClient.forceUpdate();         // Force an initial update
+
     initFirebase();
     Serial.println("Firebase connected");
     _syncDataFromFirebase();  // Đồng bộ dữ liệu ban đầu
-      sensors.begin(); // Start temperature sensor
-      updateTemperature(); // Push initial temperature data
+    sensors.begin();          // Start temperature sensor
+    updateTemperature();      // Push initial temperature data
   } else {
     Serial.println("Cannot proceed without WiFi connection.");
     while (1) {
@@ -297,7 +312,10 @@ void executeLEDEffects() {
 void handleFirebaseStream() {
 
   String path = fbdo.dataPath();
-  if (path == "/lamp/status") {
+  if (path == "/status/auto") {
+    autoSystem = fbdo.boolData();
+    updateLamp();
+  } else if (path == "/lamp/status") {
     lampState = fbdo.boolData();
     updateLamp();
   } else if (path == "/lamp/level") {
@@ -335,32 +353,104 @@ void handleFirebaseStream() {
     selectedColor = pixels.Color(r, g, b);
   }
 }
-void loop() {
-    delay(10);
-    sensors.requestTemperatures();
-    float currentTemperature = sensors.getTempCByIndex(0);  // Lấy nhiệt độ từ cảm biến DS18B20 (chỉ có 1 cảm biến) 0 là chỉ số của cảm biến nhiệt độ 1
+// void autoSyncTime() {
+//   if (timeClient.update()) {
+//     Serial.println(timeClient.getFormattedTime());
+//   }
+// }
+bool autoSystem = true;
+bool initTimeUpFirebase = false;
+void autoRunSystem() {
+  timeClient.update();  // Cập nhật thời gian từ server NTP
 
-    if (currentTemperature == -127.00) {
-        sensors.begin();
-        Serial.println("⚠️ Error: DS18B20 sensor not found!");
-    } else {
-        Serial.print("🌡️ Temperature: ");
-        Serial.print(currentTemperature);
-        Serial.println(" °C");
+  if (timeClient.isTimeSet()) {  // Kiểm tra xem thời gian đã được set chưa
+    unsigned long epochTime = timeClient.getEpochTime();
+    struct tm *ptm = gmtime((time_t *)&epochTime);
 
-        if (abs(currentTemperature - lastTemperature) > 0.1) {
-            lastTemperature = currentTemperature;
-            updateTemperature();
-        }
+    int currentHour = timeClient.getHours();      // Lấy giờ trực tiếp từ NTPClient
+    int currentMinute = timeClient.getMinutes();  // Lấy phút trực tiếp từ NTPClient
+
+    Serial.println("🕒 Time: " + String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute));
+
+
+    if (initTimeUpFirebase == false) {
+      String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute);
+      Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
+      initTimeUpFirebase = true;
     }
+    // Cập nhật thời gian lên Firebase vào các phút 00 và 30
+    if (currentMinute == 0 || currentMinute == 30) {
+      String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute);
+      Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
+      delay(60000);  // Tránh cập nhật nhiều lần trong cùng một phút
+    }
+
+    // Tự động bật đèn bigLight từ 9h-20h hàng ngày
+    if (currentHour >= 9 && currentHour < 20) {
+      digitalWrite(role_led, HIGH);
+      Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+    } else {
+      digitalWrite(role_led, LOW);
+      Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+    }
+
+    // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
+    if ((currentHour == 4 && currentMinute >= 30) || (currentHour >= 5 && currentHour < 8) || (currentHour >= 9 && currentHour < 12) || (currentHour >= 13 && currentHour < 16) || (currentHour >= 17 && currentHour < 20) || (currentHour >= 21)) {
+      if (!is_bom) {
+        is_bom = true;
+        digitalWrite(in2_bom, HIGH);
+        Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
+      }
+    } else {
+      if (is_bom) {
+        is_bom = false;
+        digitalWrite(in2_bom, LOW);
+        Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
+      }
+    }
+  } else {
+    Serial.println("Waiting for NTP time sync...");
+    timeClient.forceUpdate();
+  }
+
+  delay(1000);
+}
+void loop() {
+  // autoSyncTime();
+  if (autoSystem){
+
+  }
+  autoRunSystem();
+  delay(10);
+  sensors.requestTemperatures();
+  float currentTemperature = sensors.getTempCByIndex(0);  // Lấy nhiệt độ từ cảm biến DS18B20 (chỉ có 1 cảm biến) 0 là chỉ số của cảm biến nhiệt độ 1
+
+  if (currentTemperature == -127.00) {
+    sensors.begin();
+    Serial.println("⚠️ Error: DS18B20 sensor not found!");
+  } else {
+
+
+    if (abs(currentTemperature - lastTemperature) > 0.1) {
+      Serial.print("🌡️ Temperature: ");
+      Serial.print(lastTemperature);
+      Serial.print(" - ");
+      Serial.print(currentTemperature);
+      Serial.println(" °C");
+      lastTemperature = currentTemperature;
+      updateTemperature();
+    }
+  }
   if (Firebase.ready()) {
     if (Firebase.RTDB.readStream(&fbdo)) {
       if (fbdo.streamAvailable()) {
-          handleFirebaseStream();
+        Serial.print("🌡️ có: ");
+        handleFirebaseStream();
       }
     }
   }
-
+  // Execute LED effects based on currentEffect
+  executeLEDEffects();
 }
 // Hiệu ứng lấp đầy màu
 void nuocChay(uint32_t color, int wait) {
