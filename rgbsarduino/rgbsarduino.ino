@@ -56,554 +56,514 @@ const int levelLampHigh = 22;
 
 bool lampState = true;
 bool levelLampHighState = true;
-// const int latchPin = 10;
-// const int clockPin = 12;
-// const int dataPin = 11;
-
-// // Mảng cho LED 7 đoạn
-// const int Seg[20] = {
-//   0b00111111,  // 0
-//   0b00000110,  // 1
-//   0b01011011,  // 2
-//   0b01001111,  // 3
-//   0b01100110,  // 4
-//   0b01101101,  // 5
-//   0b01111101,  // 6
-//   0b00000111,  // 7
-//   0b01111111,  // 8
-//   0b01101111,  // 9
-//   0b10111111,  // 0.
-//   0b10000110,  // 1.
-//   0b11011011,  // 2.
-//   0b11001111,  // 3.
-//   0b11100110,  // 4.
-//   0b11101101,  // 5.
-//   0b11111101,  // 6.
-//   0b10000111,  // 7.
-//   0b11111111,  // 8.
-//   0b11101111   // 9.
-// };
 
 // Network credentials
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 
-
+// Hàm khởi tạo WiFi
 bool initWifi() {
-  WiFi.begin(ssid, password);
-  unsigned long wifiTimeout = millis() + 10000;  // Giới hạn thời gian 10 giây
-  while (WiFi.status() != WL_CONNECTED && millis() < wifiTimeout) {
-    delay(500);
-    Serial.print(".");
-  }
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\nConnected to WiFi");
-    Serial.print("IP Address: ");
-    Serial.println(WiFi.localIP());
-    return true;
-  } else {
-    Serial.println("\nFailed to connect to WiFi");
-    return false;
-  }
+    WiFi.begin(ssid, password);
+    unsigned long wifiTimeout = millis() + 10000;  // Giới hạn thời gian 10 giây
+    while (WiFi.status() != WL_CONNECTED && millis() < wifiTimeout) {
+        delay(500);
+        Serial.print(".");
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nConnected to WiFi");
+        Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+        return true;
+    } else {
+        Serial.println("\nFailed to connect to WiFi");
+        return false;
+    }
 }
 
-// void syncTime() {
-//   configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-
-//   struct tm timeinfo;
-//   int retry = 10;  // Số lần thử tối đa
-
-//   while (retry-- > 0) {
-//     if (getLocalTime(&timeinfo)) {
-//       Serial.println("Time synchronized successfully");
-//       return;
-//     }
-//     Serial.println("Retrying time sync...");
-//     delay(2000);
-//   }
-
-//   Serial.println("Failed to obtain time after multiple attempts");
-// }
-
-
+// khởi tạo firebase
 void initFirebase() {
-  configF.api_key = API_KEY;
-  auth.user.email = USER_EMAIL;
-  auth.user.password = USER_PASSWORD;
-  configF.database_url = DATABASE_URL;
-  configF.token_status_callback = tokenStatusCallback;
-  Firebase.begin(&configF, &auth);
-  Firebase.reconnectWiFi(true);
+    configF.api_key = API_KEY;
+    auth.user.email = USER_EMAIL;
+    auth.user.password = USER_PASSWORD;
+    configF.database_url = DATABASE_URL;
+    configF.token_status_callback = tokenStatusCallback;
+    Firebase.begin(&configF, &auth);
+    Firebase.reconnectWiFi(true);
 
-  // Bắt đầu stream
-  if (!Firebase.RTDB.beginStream(&fbdo, "/")) {
-    Serial.printf("Stream setup failed: %s\n", fbdo.errorReason().c_str());
-  } else {
-    Serial.println("Firebase stream initialized successfully.");
-  }
+    // Bắt đầu stream
+    if (!Firebase.RTDB.beginStream(&fbdo, "/")) {
+        Serial.printf("Stream setup failed: %s\n", fbdo.errorReason().c_str());
+    } else {
+        Serial.println("Firebase stream initialized successfully.");
+    }
 }
+
+// đồng bộ dữ liệu từ firebase
 void _syncDataFromFirebase() {
 
-    if(Firebase.RTDB.getBool(&fbdo, "/status/auto")) {
-    autoSystem = fbdo.boolData();
+    if (Firebase.RTDB.getBool(&fbdo, "/status/auto")) {
+        autoSystem = fbdo.boolData();
     }
-  if (Firebase.RTDB.getBool(&fbdo, "/lamp/status")) {
-    lampState = fbdo.boolData();
-  }
-  if (Firebase.RTDB.getBool(&fbdo, "/lamp/level")) {
-    levelLampHighState = fbdo.boolData();
-  }
-  updateLamp();
-  // Đọc trạng thái máy bơm
-  if (Firebase.RTDB.getBool(&fbdo, "/aquarium/waterPump")) {
-    is_bom = fbdo.boolData();
-    digitalWrite(in2_bom, is_bom ? HIGH : LOW);
-  }
+    if (Firebase.RTDB.getBool(&fbdo, "/lamp/status")) {
+        lampState = fbdo.boolData();
+    }
+    if (Firebase.RTDB.getBool(&fbdo, "/lamp/level")) {
+        levelLampHighState = fbdo.boolData();
+    }
+    updateLamp();
+    // Đọc trạng thái máy bơm
+    if (Firebase.RTDB.getBool(&fbdo, "/aquarium/waterPump")) {
+        is_bom = fbdo.boolData();
+        digitalWrite(in2_bom, is_bom ? HIGH : LOW);
+    }
 
-  // Đọc trạng thái đèn lớn
-  if (Firebase.RTDB.getBool(&fbdo, "/aquarium/bigLight")) {
-    is_led = fbdo.boolData();
-    digitalWrite(role_led, is_led ? HIGH : LOW);
-  }
+    // Đọc trạng thái đèn lớn
+    if (Firebase.RTDB.getBool(&fbdo, "/aquarium/bigLight")) {
+        is_led = fbdo.boolData();
+        digitalWrite(role_led, is_led ? HIGH : LOW);
+    }
 
-  // Đọc tốc độ máy bơm khí
-  if (Firebase.RTDB.getInt(&fbdo, "/aquarium/airPumpSpeed")) {
-    airPumpSpeed = fbdo.intData();
-    analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
-  }
+    // Đọc tốc độ máy bơm khí
+    if (Firebase.RTDB.getInt(&fbdo, "/aquarium/airPumpSpeed")) {
+        airPumpSpeed = fbdo.intData();
+        analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+    }
 
-  // Đọc dữ liệu LED
-  if (Firebase.RTDB.getInt(&fbdo, "/led/currentEffect")) {
-    currentEffect = fbdo.intData();
-  }
-  if (Firebase.RTDB.getInt(&fbdo, "/led/brightness")) {
-    brightness = fbdo.intData();
-    pixels.setBrightness(brightness);
-  }
-  if (Firebase.RTDB.getInt(&fbdo, "/led/speed")) {
-    speed = fbdo.intData();
-  }
-  if (Firebase.RTDB.getJSON(&fbdo, "/led/color")) {
-    FirebaseJson json = fbdo.jsonObject();
-    FirebaseJsonData jsonData;
+    // Đọc dữ liệu LED
+    if (Firebase.RTDB.getInt(&fbdo, "/led/currentEffect")) {
+        currentEffect = fbdo.intData();
+    }
+    if (Firebase.RTDB.getInt(&fbdo, "/led/brightness")) {
+        brightness = fbdo.intData();
+        pixels.setBrightness(brightness);
+    }
+    if (Firebase.RTDB.getInt(&fbdo, "/led/speed")) {
+        speed = fbdo.intData();
+    }
+    if (Firebase.RTDB.getJSON(&fbdo, "/led/color")) {
+        FirebaseJson json = fbdo.jsonObject();
+        FirebaseJsonData jsonData;
 
-    json.get(jsonData, "r");
-    int r = jsonData.success ? jsonData.to<int>() : 0;
+        json.get(jsonData, "r");
+        int r = jsonData.success ? jsonData.to<int>() : 0;
 
-    json.get(jsonData, "g");
-    int g = jsonData.success ? jsonData.to<int>() : 0;
+        json.get(jsonData, "g");
+        int g = jsonData.success ? jsonData.to<int>() : 0;
 
-    json.get(jsonData, "b");
-    int b = jsonData.success ? jsonData.to<int>() : 0;
+        json.get(jsonData, "b");
+        int b = jsonData.success ? jsonData.to<int>() : 0;
 
-    selectedColor = pixels.Color(r, g, b);
-  }
+        selectedColor = pixels.Color(r, g, b);
+    }
 }
+
 void setup() {
-  Serial.println("Starting...");
-  Serial.begin(115200);
-  Serial.println("1");
-  pixels.begin();
-  Serial.println("2");
-  pixels.setBrightness(brightness);
-  Serial.println("3");
-  // Khởi tạo các chân GPIO
-  //  pinMode(btn_bom, INPUT);
-  pinMode(role_led, OUTPUT);
-  digitalWrite(role_led, HIGH);
-  Serial.println("4");
-  pinMode(ena, OUTPUT);
-  Serial.println("5");
-  // pinMode(in1, OUTPUT);
-  pinMode(in2_bom, OUTPUT);
-  Serial.println("6");
-  pinMode(lamp, OUTPUT);
-  digitalWrite(lamp, HIGH);
-  Serial.println("7");
-  pinMode(levelLampHigh, OUTPUT);
-  digitalWrite(levelLampHigh, HIGH);
-  // pinMode(latchPin, OUTPUT);
-  // pinMode(clockPin, OUTPUT);
-  // pinMode(dataPin, OUTPUT);
-
-
-  // Kết nối WiFi và Firebase
-  if (initWifi()) {
-    Serial.println("WiFi connected");
-    delay(2000);
-    timeClient.begin();
-    timeClient.setTimeOffset(25200);  // 7 hours offset in seconds
-    timeClient.forceUpdate();         // Force an initial update
-
-    initFirebase();
-    Serial.println("Firebase connected");
-    _syncDataFromFirebase();  // Đồng bộ dữ liệu ban đầu
-    sensors.begin();          // Start temperature sensor
-    updateTemperature();      // Push initial temperature data
-  } else {
-    Serial.println("Cannot proceed without WiFi connection.");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("setup done");
-}
-void updateLamp() {
-  if (lampState == true) {
-    digitalWrite(lamp, LOW);  // Tắt đèn
-  } else {
-
-    digitalWrite(lamp, HIGH);  // Bật đèn
-  }
-  if (levelLampHighState == true) {
-
-    digitalWrite(levelLampHigh, LOW);  // Tắt đèn
-  } else {
-    digitalWrite(levelLampHigh, HIGH);  // Bật đèn
-  }
-}
-void updateTemperature() {
-  float temperature = sensors.getTempCByIndex(0);
-  if (temperature != -127.00) {
-    Firebase.RTDB.setFloat(&fbdo, "/aquarium/temperature", temperature);
-    Serial.print("Updated temperature to Firebase: ");
-    Serial.println(temperature);
-  }
-}
-void executeLEDEffects() {
-  switch (currentEffect) {
-    case 0:
-      tatDen();
-      break;
-    case 1:
-      pixels.setBrightness(brightness);
-      rotatingColors(speed / 5);
-      break;
-    case 2:
-      pixels.setBrightness(brightness);
-      nhipDap(speed / 10);
-      break;
-    case 3:
-      pixels.setBrightness(brightness);
-      nhipDapWithColor(speed / 10);
-      break;
-    case 4:
-      pixels.setBrightness(brightness);
-      nuocChay(selectedColor, speed);
-      break;
-    case 5:
-      pixels.setBrightness(brightness);
-      muaRoi(speed, 3);
-      break;
-    case 6:
-      pixels.setBrightness(brightness);
-      randomBlink(speed);
-      break;
-    case 7:
-      pixels.setBrightness(brightness);
-      strobeEffect(selectedColor, speed);
-      break;
-    case 8:
-      pixels.setBrightness(brightness);
-      chaseEffect(selectedColor, speed);
-      break;
-  }
-  pixels.setBrightness(brightness);
-}
-void handleFirebaseStream() {
-
-  String path = fbdo.dataPath();
-  if (path == "/status/auto") {
-    autoSystem = fbdo.boolData();
-    updateLamp();
-  } else if (path == "/lamp/status") {
-    lampState = fbdo.boolData();
-    updateLamp();
-  } else if (path == "/lamp/level") {
-    levelLampHighState = fbdo.boolData();
-    updateLamp();
-  } else if (path == "/aquarium/waterPump") {
-    is_bom = fbdo.boolData();
-    digitalWrite(in2_bom, is_bom ? HIGH : LOW);
-  } else if (path == "/aquarium/bigLight") {
-    is_led = fbdo.boolData();
-    digitalWrite(role_led, is_led ? HIGH : LOW);
-  } else if (path == "/aquarium/airPumpSpeed") {
-    airPumpSpeed = fbdo.intData();
-    analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
-  } else if (path == "/led/currentEffect") {
-    currentEffect = fbdo.intData();
-  } else if (path == "/led/brightness") {
-    brightness = fbdo.intData();
+    Serial.println("Starting...");
+    Serial.begin(115200);
+    Serial.println("1");
+    pixels.begin();
+    Serial.println("2");
     pixels.setBrightness(brightness);
-  } else if (path == "/led/speed") {
-    speed = fbdo.intData();
-  } else if (path == "/led/color") {
-    FirebaseJson json = fbdo.jsonObject();
-    FirebaseJsonData jsonData;
+    Serial.println("3");
+    // Khởi tạo các chân GPIO
+    //  pinMode(btn_bom, INPUT);
+    pinMode(role_led, OUTPUT);
+    digitalWrite(role_led, HIGH);
+    pinMode(ena, OUTPUT);
+    pinMode(in2_bom, OUTPUT);
+    pinMode(lamp, OUTPUT);
+    digitalWrite(lamp, HIGH);
+    pinMode(levelLampHigh, OUTPUT);
+    digitalWrite(levelLampHigh, HIGH);
 
-    json.get(jsonData, "r");
-    int r = jsonData.success ? jsonData.to<int>() : 0;
+    // Kết nối WiFi và Firebase
+    if (initWifi()) {
+        Serial.println("WiFi connected");
+        delay(2000);
+        timeClient.begin();
+        timeClient.setTimeOffset(25200);  // 7 hours offset in seconds
+        timeClient.forceUpdate();         // Force an initial update
 
-    json.get(jsonData, "g");
-    int g = jsonData.success ? jsonData.to<int>() : 0;
-
-    json.get(jsonData, "b");
-    int b = jsonData.success ? jsonData.to<int>() : 0;
-
-    selectedColor = pixels.Color(r, g, b);
-  }
+        initFirebase();
+        Serial.println("Firebase connected");
+        _syncDataFromFirebase();  // Đồng bộ dữ liệu ban đầu
+        sensors.begin();          // Start temperature sensor
+        updateTemperature();      // Push initial temperature data
+    } else {
+        Serial.println("Cannot proceed without WiFi connection.");
+        while (1) {
+            delay(1000);
+        }
+    }
+    Serial.println("setup done");
 }
-// void autoSyncTime() {
-//   if (timeClient.update()) {
-//     Serial.println(timeClient.getFormattedTime());
-//   }
-// }
+
+// Cập nhật trạng thái đèn lên Firebase
+void updateLamp() {
+    if (lampState == true) {
+        digitalWrite(lamp, LOW);  // Tắt đèn
+    } else {
+
+        digitalWrite(lamp, HIGH);  // Bật đèn
+    }
+    if (levelLampHighState == true) {
+
+        digitalWrite(levelLampHigh, LOW);  // Tắt đèn
+    } else {
+        digitalWrite(levelLampHigh, HIGH);  // Bật đèn
+    }
+}
+
+// Cập nhật nhiệt độ lên Firebase
+void updateTemperature() {
+    float temperature = sensors.getTempCByIndex(0);
+    if (temperature != -127.00) {
+        Firebase.RTDB.setFloat(&fbdo, "/aquarium/temperature", temperature);
+        Serial.print("Updated temperature to Firebase: ");
+        Serial.println(temperature);
+    }
+}
+
+// Hàm thực thi hiệu ứng LED dựa trên currentEffect
+void executeLEDEffects() {
+    switch (currentEffect) {
+        case 0:
+            tatDen();
+            break;
+        case 1:
+            pixels.setBrightness(brightness);
+            rotatingColors(speed / 5);
+            break;
+        case 2:
+            pixels.setBrightness(brightness);
+            nhipDap(speed / 10);
+            break;
+        case 3:
+            pixels.setBrightness(brightness);
+            nhipDapWithColor(speed / 10);
+            break;
+        case 4:
+            pixels.setBrightness(brightness);
+            nuocChay(selectedColor, speed);
+            break;
+        case 5:
+            pixels.setBrightness(brightness);
+            muaRoi(speed, 3);
+            break;
+        case 6:
+            pixels.setBrightness(brightness);
+            randomBlink(speed);
+            break;
+        case 7:
+            pixels.setBrightness(brightness);
+            strobeEffect(selectedColor, speed);
+            break;
+        case 8:
+            pixels.setBrightness(brightness);
+            chaseEffect(selectedColor, speed);
+            break;
+    }
+    pixels.setBrightness(brightness);
+}
+
+// Hàm xử lý dữ liệu từ Firebase khi có stream
+void handleFirebaseStream() {
+    String path = fbdo.dataPath();
+    if (path == "/status/auto") {
+        autoSystem = fbdo.boolData();
+        updateLamp();
+    } else if (path == "/lamp/status") {
+        lampState = fbdo.boolData();
+        updateLamp();
+    } else if (path == "/lamp/level") {
+        levelLampHighState = fbdo.boolData();
+        updateLamp();
+    } else if (path == "/aquarium/waterPump") {
+        is_bom = fbdo.boolData();
+        digitalWrite(in2_bom, is_bom ? HIGH : LOW);
+    } else if (path == "/aquarium/bigLight") {
+        is_led = fbdo.boolData();
+        digitalWrite(role_led, is_led ? HIGH : LOW);
+    } else if (path == "/aquarium/airPumpSpeed") {
+        airPumpSpeed = fbdo.intData();
+        analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+    } else if (path == "/led/currentEffect") {
+        currentEffect = fbdo.intData();
+    } else if (path == "/led/brightness") {
+        brightness = fbdo.intData();
+        pixels.setBrightness(brightness);
+    } else if (path == "/led/speed") {
+        speed = fbdo.intData();
+    } else if (path == "/led/color") {
+        FirebaseJson json = fbdo.jsonObject();
+        FirebaseJsonData jsonData;
+
+        json.get(jsonData, "r");
+        int r = jsonData.success ? jsonData.to<int>() : 0;
+
+        json.get(jsonData, "g");
+        int g = jsonData.success ? jsonData.to<int>() : 0;
+
+        json.get(jsonData, "b");
+        int b = jsonData.success ? jsonData.to<int>() : 0;
+
+        selectedColor = pixels.Color(r, g, b);
+    }
+}
+
+// biến kiểm tra đã cập nhật thời gian lên Firebase chưa
 bool initTimeUpFirebase = false;
+
+// Hàm tự động cập nhật thời gian và chạy hệ thống
 void autoRunSystem() {
-  timeClient.update();  // Cập nhật thời gian từ server NTP
+    timeClient.update();  // Cập nhật thời gian từ server NTP
 
-  if (timeClient.isTimeSet()) {  // Kiểm tra xem thời gian đã được set chưa
-    unsigned long epochTime = timeClient.getEpochTime();
-    struct tm *ptm = gmtime((time_t *)&epochTime);
+    if (timeClient.isTimeSet()) {  // Kiểm tra xem thời gian đã được set chưa
+        unsigned long epochTime = timeClient.getEpochTime();
+        struct tm *ptm = gmtime((time_t * ) & epochTime);
 
-    int currentHour = timeClient.getHours();      // Lấy giờ trực tiếp từ NTPClient
-    int currentMinute = timeClient.getMinutes();  // Lấy phút trực tiếp từ NTPClient
+        int currentHour = timeClient.getHours();      // Lấy giờ trực tiếp từ NTPClient
+        int currentMinute = timeClient.getMinutes();  // Lấy phút trực tiếp từ NTPClient
 
-    Serial.println("🕒 Time: " + String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute));
+        Serial.println("🕒 Time: " + String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
+                       String(currentMinute));
 
+        if (initTimeUpFirebase == false) {
+            String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
+                                 String(currentMinute);
+            Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
+            initTimeUpFirebase = true;
+        }
+        // Cập nhật thời gian lên Firebase vào các phút 00 và 30
+        if (currentMinute == 0 || currentMinute == 30) {
+            String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
+                                 String(currentMinute);
+            Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
+            delay(60000);  // Tránh cập nhật nhiều lần trong cùng một phút
+        }
 
-    if (initTimeUpFirebase == false) {
-      String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute);
-      Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
-      initTimeUpFirebase = true;
-    }
-    // Cập nhật thời gian lên Firebase vào các phút 00 và 30
-    if (currentMinute == 0 || currentMinute == 30) {
-      String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute);
-      Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
-      delay(60000);  // Tránh cập nhật nhiều lần trong cùng một phút
-    }
+        // Tự động bật đèn bigLight từ 9h-20h hàng ngày
+        if (currentHour >= 9 && currentHour < 20) {
+            digitalWrite(role_led, HIGH);
+            Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+        } else {
+            digitalWrite(role_led, LOW);
+            Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+        }
 
-    // Tự động bật đèn bigLight từ 9h-20h hàng ngày
-    if (currentHour >= 9 && currentHour < 20) {
-      digitalWrite(role_led, HIGH);
-      Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+        // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
+        if ((currentHour == 4 && currentMinute >= 30) || (currentHour >= 5 && currentHour < 8) ||
+            (currentHour >= 9 && currentHour < 12) || (currentHour >= 13 && currentHour < 16) ||
+            (currentHour >= 17 && currentHour < 20) || (currentHour >= 21)) {
+            if (!is_bom) {
+                is_bom = true;
+                digitalWrite(in2_bom, HIGH);
+                Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
+            }
+        } else {
+            if (is_bom) {
+                is_bom = false;
+                digitalWrite(in2_bom, LOW);
+                Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
+            }
+        }
     } else {
-      digitalWrite(role_led, LOW);
-      Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+        Serial.println("Waiting for NTP time sync...");
+        timeClient.forceUpdate();
     }
 
-    // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
-    if ((currentHour == 4 && currentMinute >= 30) || (currentHour >= 5 && currentHour < 8) || (currentHour >= 9 && currentHour < 12) || (currentHour >= 13 && currentHour < 16) || (currentHour >= 17 && currentHour < 20) || (currentHour >= 21)) {
-      if (!is_bom) {
-        is_bom = true;
-        digitalWrite(in2_bom, HIGH);
-        Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
-      }
-    } else {
-      if (is_bom) {
-        is_bom = false;
-        digitalWrite(in2_bom, LOW);
-        Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
-      }
-    }
-  } else {
-    Serial.println("Waiting for NTP time sync...");
-    timeClient.forceUpdate();
-  }
-
-  delay(1000);
+    delay(1000);
 }
+
 void loop() {
-  // autoSyncTime();
-  if (autoSystem){
-      autoRunSystem();
-  }
-  delay(10);
-  sensors.requestTemperatures();
-  float currentTemperature = sensors.getTempCByIndex(0);  // Lấy nhiệt độ từ cảm biến DS18B20 (chỉ có 1 cảm biến) 0 là chỉ số của cảm biến nhiệt độ 1
-
-  if (currentTemperature == -127.00) {
-    sensors.begin();
-    Serial.println("⚠️ Error: DS18B20 sensor not found!");
-  } else {
-
-
-    if (abs(currentTemperature - lastTemperature) > 0.1) {
-      Serial.print("🌡️ Temperature: ");
-      Serial.print(lastTemperature);
-      Serial.print(" - ");
-      Serial.print(currentTemperature);
-      Serial.println(" °C");
-      lastTemperature = currentTemperature;
-      updateTemperature();
+    // autoSyncTime();
+    if (autoSystem) {
+        autoRunSystem();
     }
-  }
-  if (Firebase.ready()) {
-    if (Firebase.RTDB.readStream(&fbdo)) {
-      if (fbdo.streamAvailable()) {
-        Serial.print("🌡️ có: ");
-        handleFirebaseStream();
-      }
+    delay(10);
+    sensors.requestTemperatures();
+    float currentTemperature = sensors.getTempCByIndex(
+            0);  // Lấy nhiệt độ từ cảm biến DS18B20 (chỉ có 1 cảm biến) 0 là chỉ số của cảm biến nhiệt độ 1
+
+    if (currentTemperature == -127.00) {
+        sensors.begin();
+        Serial.println("⚠️ Error: DS18B20 sensor not found!");
+    } else {
+        if (abs(currentTemperature - lastTemperature) > 0.1) {
+            Serial.print("🌡️ Temperature: ");
+            Serial.print(lastTemperature);
+            Serial.print(" - ");
+            Serial.print(currentTemperature);
+            Serial.println(" °C");
+            lastTemperature = currentTemperature;
+            updateTemperature();
+        }
     }
-  }
-  // Execute LED effects based on currentEffect
-  executeLEDEffects();
+    if (Firebase.ready()) {
+        if (Firebase.RTDB.readStream(&fbdo)) {
+            if (fbdo.streamAvailable()) {
+                Serial.print("🌡️ có: ");
+                handleFirebaseStream();
+            }
+        }
+    }
+    // Execute LED effects based on currentEffect
+    executeLEDEffects();
 }
+
 // Hiệu ứng lấp đầy màu
 void nuocChay(uint32_t color, int wait) {
-  for (int i = pixels.numPixels(); i >= 0; i--) {
-    pixels.setPixelColor(i, color);
-    pixels.show();
-    delay(wait);
-  }
-  for (int i = pixels.numPixels(); i >= 0; i--) {
-    pixels.setPixelColor(i, 0);
-    pixels.show();
-    delay(wait);
-  }
+    for (int i = pixels.numPixels(); i >= 0; i--) {
+        pixels.setPixelColor(i, color);
+        pixels.show();
+        delay(wait);
+    }
+    for (int i = pixels.numPixels(); i >= 0; i--) {
+        pixels.setPixelColor(i, 0);
+        pixels.show();
+        delay(wait);
+    }
 }
 
 // Hiệu ứng lấp lánh
 // wait: thời gian chờ
 // iterations: số lần lặp
 void muaRoi(int speed, int iterations) {
-  for (int iter = 0; iter < iterations; iter++) {
-    // Hiệu ứng từ phải sang trái
-    for (int i = NUMPIXELS - 1; i >= 0; i--) {
-      int rgb1 = random(255);
-      int rgb2 = random(255);
-      int rgb3 = random(255);
+    for (int iter = 0; iter < iterations; iter++) {
+        // Hiệu ứng từ phải sang trái
+        for (int i = NUMPIXELS - 1; i >= 0; i--) {
+            int rgb1 = random(255);
+            int rgb2 = random(255);
+            int rgb3 = random(255);
 
-      // Bật pixel với màu ngẫu nhiên
-      pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
-      pixels.show();
-      delay(speed);  // Điều chỉnh tốc độ
+            // Bật pixel với màu ngẫu nhiên
+            pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
+            pixels.show();
+            delay(speed);  // Điều chỉnh tốc độ
 
-      // Tắt pixel
-      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+            // Tắt pixel
+            pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+        }
+
+        // Hiệu ứng từ trái sang phải
+        for (int i = 0; i < NUMPIXELS; i++) {
+            int rgb1 = random(255);
+            int rgb2 = random(255);
+            int rgb3 = random(255);
+
+            // Bật pixel với màu ngẫu nhiên
+            pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
+            pixels.show();
+            delay(speed);  // Điều chỉnh tốc độ
+
+            // Tắt pixel
+            pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+        }
     }
-
-    // Hiệu ứng từ trái sang phải
-    for (int i = 0; i < NUMPIXELS; i++) {
-      int rgb1 = random(255);
-      int rgb2 = random(255);
-      int rgb3 = random(255);
-
-      // Bật pixel với màu ngẫu nhiên
-      pixels.setPixelColor(i, pixels.Color(rgb1, rgb2, rgb3));
-      pixels.show();
-      delay(speed);  // Điều chỉnh tốc độ
-
-      // Tắt pixel
-      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
-    }
-  }
 }
 
 // Hiệu ứng nhịp đập
 void nhipDap(int speed) {
-  int rgb1 = random(255);
-  int rgb2 = random(255);
-  int rgb3 = random(255);
-  uint32_t color = pixels.Color(rgb1, rgb2, rgb3);
+    int rgb1 = random(255);
+    int rgb2 = random(255);
+    int rgb3 = random(255);
+    uint32_t color = pixels.Color(rgb1, rgb2, rgb3);
 
-  // Tăng độ sáng
-  for (int j = 0; j < 255; j++) {
-    pixels.fill(color, 0, NUMPIXELS);
-    pixels.setBrightness(j);
-    pixels.show();
-    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
-  }
+    // Tăng độ sáng
+    for (int j = 0; j < 255; j++) {
+        pixels.fill(color, 0, NUMPIXELS);
+        pixels.setBrightness(j);
+        pixels.show();
+        delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+    }
 
-  // Giảm độ sáng
-  for (int j = 255; j >= 0; j--) {
-    pixels.fill(color, 0, NUMPIXELS);
-    pixels.setBrightness(j);
-    pixels.show();
-    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
-  }
+    // Giảm độ sáng
+    for (int j = 255; j >= 0; j--) {
+        pixels.fill(color, 0, NUMPIXELS);
+        pixels.setBrightness(j);
+        pixels.show();
+        delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+    }
 }
 
 void nhipDapWithColor(int speed) {
-  // Tăng độ sáng
-  for (int j = 0; j < 255; j++) {
-    pixels.fill(selectedColor, 0, NUMPIXELS);
-    pixels.setBrightness(j);
-    pixels.show();
-    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
-  }
+    // Tăng độ sáng
+    for (int j = 0; j < 255; j++) {
+        pixels.fill(selectedColor, 0, NUMPIXELS);
+        pixels.setBrightness(j);
+        pixels.show();
+        delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+    }
 
-  // Giảm độ sáng
-  for (int j = 255; j >= 0; j--) {
-    pixels.fill(selectedColor, 0, NUMPIXELS);
-    pixels.setBrightness(j);
-    pixels.show();
-    delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
-  }
+    // Giảm độ sáng
+    for (int j = 255; j >= 0; j--) {
+        pixels.fill(selectedColor, 0, NUMPIXELS);
+        pixels.setBrightness(j);
+        pixels.show();
+        delay(speed);  // Sử dụng speed để điều chỉnh tốc độ
+    }
 }
 
 // tắt đèn
 void tatDen() {
-  pixels.clear();
-  pixels.show();
+    pixels.clear();
+    pixels.show();
 }
 
 //Hiệu ứng xoay vòng (Rotating Colors)
 void rotatingColors(int wait) {
-  static uint8_t hue = 0;
-  for (int i = 0; i < pixels.numPixels(); i++) {
-    pixels.setPixelColor(i, Wheel((hue + i * 256 / pixels.numPixels()) & 255));
-  }
-  pixels.show();
-  hue++;
-  delay(wait);
+    static uint8_t hue = 0;
+    for (int i = 0; i < pixels.numPixels(); i++) {
+        pixels.setPixelColor(i, Wheel((hue + i * 256 / pixels.numPixels()) & 255));
+    }
+    pixels.show();
+    hue++;
+    delay(wait);
 }
 
 //Hiệu ứng nhấp nháy ngẫu nhiên (Random Blink)
 void randomBlink(int wait) {
-  for (int i = 0; i < pixels.numPixels(); i++) {
-    pixels.setPixelColor(i, pixels.Color(random(255), random(255), random(255)));
-  }
-  pixels.show();
-  delay(wait);
-  pixels.clear();
-  pixels.show();
-  delay(wait);
+    for (int i = 0; i < pixels.numPixels(); i++) {
+        pixels.setPixelColor(i, pixels.Color(random(255), random(255), random(255)));
+    }
+    pixels.show();
+    delay(wait);
+    pixels.clear();
+    pixels.show();
+    delay(wait);
 }
 
 // Hiệu ứng đuổi màu (Chase Effect)
 void chaseEffect(uint32_t color, int wait) {
-  for (int i = 0; i < pixels.numPixels(); i++) {
-    pixels.setPixelColor(i, color);
-    pixels.show();
-    delay(wait);
-    pixels.setPixelColor(i, 0);
-  }
+    for (int i = 0; i < pixels.numPixels(); i++) {
+        pixels.setPixelColor(i, color);
+        pixels.show();
+        delay(wait);
+        pixels.setPixelColor(i, 0);
+    }
 }
 
 // Hiệu ứng lấp lánh theo nhịp (Strobe Effect)
 void strobeEffect(uint32_t color, int wait) {
 
-  pixels.fill(color, 0, NUMPIXELS);
-  pixels.show();
-  delay(wait);
-  pixels.clear();
-  pixels.show();
-  delay(wait);
+    pixels.fill(color, 0, NUMPIXELS);
+    pixels.show();
+    delay(wait);
+    pixels.clear();
+    pixels.show();
+    delay(wait);
 }
 
 // Hàm hỗ trợ cho hiệu ứng cầu vồng
 uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if (WheelPos < 85) {
-    return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if (WheelPos < 170) {
-    WheelPos -= 85;
-    return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+    WheelPos = 255 - WheelPos;
+    if (WheelPos < 85) {
+        return pixels.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+    }
+    if (WheelPos < 170) {
+        WheelPos -= 85;
+        return pixels.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+    }
+    WheelPos -= 170;
+    return pixels.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
 }
