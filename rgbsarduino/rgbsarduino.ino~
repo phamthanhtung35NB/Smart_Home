@@ -267,7 +267,7 @@ void handleFirebaseStream() {
     if (is_led == true && autoSystem == false) {
       digitalWrite(LedBeLow, LOW);
     } else if (is_led == false && autoSystem == false) {
-      digitalWrite(LedBeLow, HIGH);
+      digitalWrite(LedBeLow, );
     }
   } else if (path == "/led/currentEffect") {
     currentEffect = fbdo.intData();
