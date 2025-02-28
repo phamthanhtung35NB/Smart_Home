@@ -54,7 +54,7 @@ int airPumpSpeed = 5;  // Tốc độ máy bơm khí
 // const int btn_bom = 9;
 const int ena = 5;  // PWM pin for air pump
 // const int in1 = 4;
-const int bomKKLow = 18;        // Điều khiển máy bơm (bơm khí)
+const int bomKKLow = 18;       // Điều khiển máy bơm (bơm khí)
 const int LedBeLow = 19;       // Điều khiển đèn bể cá
 const int lamp = 21;           // Điều khiển đèn bàn học
 const int levelLampHigh = 22;  // Điều khiển đèn bàn học kích hoạt tăng cường sáng
@@ -106,7 +106,7 @@ void initFirebase() {
   Firebase.begin(&configF, &auth);
   Firebase.reconnectWiFi(true);
 
-  // Bắt đầu stream 
+  // Bắt đầu stream
   if (!Firebase.RTDB.beginStream(&fbdo, "/")) {
     Serial.printf("Stream setup failed: %s\n", fbdo.errorReason().c_str());
   } else {
@@ -143,7 +143,7 @@ void _syncDataFromFirebase() {
   // Đọc trạng thái đèn lớn
   if (Firebase.RTDB.getBool(&fbdo, "/aquarium/bigLight")) {
     is_led = fbdo.boolData();
-    digitalWrite(LedBeLow, is_led ? LOW:HIGH );
+    digitalWrite(LedBeLow, is_led ? LOW : HIGH);
   }
 
   // Đọc tốc độ máy bơm khí
@@ -267,7 +267,7 @@ void handleFirebaseStream() {
     if (is_led == true && autoSystem == false) {
       digitalWrite(LedBeLow, LOW);
     } else if (is_led == false && autoSystem == false) {
-      digitalWrite(LedBeLow, );
+      digitalWrite(LedBeLow, HIGH);
     }
   } else if (path == "/led/currentEffect") {
     currentEffect = fbdo.intData();
@@ -342,7 +342,7 @@ void autoRunSystem() {
     }
 
     // Cập nhật thời gian lên Firebase vào các phút 00 và 30
-    if (currentMinute == 0 || currentMinute == 20 ||currentMinute == 40) {
+    if (currentMinute == 0 || currentMinute == 20 || currentMinute == 40) {
       timeClient.forceUpdate();  // Gọi forceUpdate trước khi lưu lên Firebase
       currentHour = timeClient.getHours();
       currentMinute = timeClient.getMinutes();
@@ -352,34 +352,35 @@ void autoRunSystem() {
       delay(60000);  // Tránh cập nhật nhiều lần trong cùng một phút
     }
 
-    // Tự động bật đèn bigLight từ 9h-22h hàng ngày
-    if (currentHour >= 9 && currentHour < 23) {
-        if (is_led == false) {
-          digitalWrite(LedBeLow, LOW);
-          Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
-          Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
-          is_led = true;
-        }
+    // Tự động bật đèn bigLight từ 9h-24h hàng ngày
+    if (currentHour >= 9 && currentHour <=23) {
+      if (is_led == false) {
+        digitalWrite(LedBeLow, LOW);
+        Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+        Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
+        is_led = true;
+      }
 
     } else {
-        if (is_led == true) {
-          digitalWrite(LedBeLow, HIGH);
-          Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
-          Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
-          is_led = false;
-        }
+      if (is_led == true) {
+        digitalWrite(LedBeLow, HIGH);
+        Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+        Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
+        is_led = false;
+      }
     }
 
     // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
-    if ((currentHour == 4 && currentMinute >= 30) || (currentHour >= 5 && currentHour < 8) || (currentHour >= 9 && currentHour < 12) || (currentHour >= 13 && currentHour < 16) || (currentHour >= 17 && currentHour < 20) || (currentHour >= 21)) {
-      if (is_bom == false) {
+//  '4:30 - 9:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 00:59',
+    if (){
+        if (is_bom == false) {
         digitalWrite(bomKKLow, LOW);
         Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
         Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
         is_bom = true;
       }
     } else {
-     if (is_bom == true) {
+      if (is_bom == true) {
         digitalWrite(bomKKLow, HIGH);
         Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
         Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
