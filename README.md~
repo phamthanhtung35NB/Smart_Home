@@ -97,7 +97,7 @@ Những thay đổi này sẽ giúp plugin local_auth hoạt động đúng vớ
 
 # Phân tích các thay đổi để chức năng xác thực vân tay hoạt động
 
-Tính năng xác thực vân tay hiện đã hoạt động tốt. Dưới đây là những sửa đổi chính đã thực hiện để giải quyết vấn đề:
+Tôi thấy tính năng xác thực vân tay hiện đã hoạt động tốt. Dưới đây là những sửa đổi chính đã thực hiện để giải quyết vấn đề:
 
 ## 1. Thay đổi kiểu Activity trong MainActivity
 Thay vì sử dụng `FlutterActivity`, đã đổi sang `FlutterFragmentActivity`:

@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 3:
         return LedController();
       default:
-        return LedController();
+        return  AutoStatusScreen(); // Add the new screen to the navigation
     }
   }
 

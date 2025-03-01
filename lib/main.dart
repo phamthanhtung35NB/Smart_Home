@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'home_screen.dart';
 import 'firebase_options.dart';
 import 'firebase_options.dart';
+import 'auth_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomeScreen(),
+      home: AuthScreen(),
     );
   }
 }

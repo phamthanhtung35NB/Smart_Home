@@ -23,9 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return AquariumManager();
       case 2:
-        return LampController();
-      case 3:
         return LedController();
+      case 3:
+        return LampController();
       default:
         return  AutoStatusScreen(); // Add the new screen to the navigation
     }

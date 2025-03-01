@@ -10,7 +10,8 @@ plugins {
 
 android {
     namespace = "com.example.rgbs"
-    compileSdk = flutter.compileSdkVersion
+//    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -41,7 +42,11 @@ android {
         }
     }
 }
-
+dependencies {
+    // Thêm dòng này
+    implementation "androidx.fragment:fragment:1.4.1"
+    // Các dependency khác...
+}
 flutter {
     source = "../.."
 }
