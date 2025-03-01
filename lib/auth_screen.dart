@@ -308,7 +308,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  'Phiên bản web: Sử dụng mã PIN mặc định 123456',
+                                  'Phiên bản web: Sử dụng mã PIN',
                                   style:
                                       TextStyle(color: Colors.orange.shade800),
                                   textAlign: TextAlign.center,

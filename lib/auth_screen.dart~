@@ -9,7 +9,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 // import 'package:flutter_js/flutter_js.dart';
 import 'dart:convert'; // Add this import for jsonDecode
-import 'js_bridge.dart';
 
 class AuthScreen extends StatefulWidget {
   @override
