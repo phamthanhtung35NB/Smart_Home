@@ -1,12 +1,15 @@
+// lib/location_service.dart
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:location/location.dart' as loc;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import 'js_bridge.dart';
+import 'js_bridge_interface.dart';
+import 'js_bridge_web.dart' if (dart.library.io) 'js_bridge_mobile.dart';
 
 class LocationService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
+
 
   Future<bool> requestAndSendLocation() async {
     if (!kIsWeb) return true; // Only for web

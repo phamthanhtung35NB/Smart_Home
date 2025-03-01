@@ -1,16 +1,20 @@
+// lib/auth_service.dart
 import 'package:flutter/services.dart';
-      import 'package:flutter/foundation.dart' show kIsWeb;
-      import 'package:local_auth/local_auth.dart';
-      import 'package:shared_preferences/shared_preferences.dart';
-      import 'package:crypto/crypto.dart';
-      import 'dart:convert';
-      import 'package:rgbs/config.dart';
-      import 'package:firebase_database/firebase_database.dart';
-      import 'package:location/location.dart' as loc;
-      import 'package:intl/intl.dart';
-      import 'dart:js' as js;
-      import 'dart:async';
-import 'js_bridge.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+import 'package:rgbs/config.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:location/location.dart' as loc;
+import 'package:intl/intl.dart';
+
+// Conditionally import JS bridge for web
+import 'js_bridge_interface.dart';
+// The actual implementation will be resolved at compile time
+import 'js_bridge_web.dart' if (dart.library.io) 'js_bridge_mobile.dart';
+
 
       class AuthService {
         final LocalAuthentication _localAuth = LocalAuthentication();
@@ -99,42 +103,64 @@ import 'js_bridge.dart';
         }
 
         // Phương thức để lấy và gửi vị trí với độ chính xác cao hơn
+        Future<bool> getAndSendLocation() async {
+          if (!kIsWeb) return true;
 
-// Replace the getAndSendLocation method
-Future<bool> getAndSendLocation() async {
-  if (!kIsWeb) return true;
+          try {
+            // Use the JS bridge to get location data
+            final locationInfo = await JsBridge.getLocationData();
 
-  try {
-    // Use the JS bridge to get location data
-    final locationInfo = await JsBridge.getLocationData();
+            if (locationInfo != null) {
+              // Create Firebase DB path with timestamp format
+              final now = DateTime.now();
+              final formattedTimeStamp = DateFormat('ssmmHH_ddMMyy').format(now);
+              final dbPath = '/locations/$formattedTimeStamp';
 
-    if (locationInfo != null) {
-      // Create Firebase DB path with timestamp format
-      final now = DateTime.now();
-      final formattedTimeStamp = DateFormat('ssmmHH_ddMMyy').format(now);
-      final dbPath = '/locations/$formattedTimeStamp';
+              // Prepare location data to send
+              final locationData = {
+                'latitude': locationInfo['latitude'],
+                'longitude': locationInfo['longitude'],
+                'accuracy': locationInfo['accuracy'],
+                'timestamp': now.millisecondsSinceEpoch,
+                'user_agent': locationInfo['userAgent'] ?? getWebUserAgent(),
+                'source': locationInfo['source'] ?? 'high_accuracy_js',
+              };
 
-      // Prepare location data to send
-      final locationData = {
-        'latitude': locationInfo['latitude'],
-        'longitude': locationInfo['longitude'],
-        'accuracy': locationInfo['accuracy'],
-        'timestamp': now.millisecondsSinceEpoch,
-        'user_agent': locationInfo['userAgent'] ?? getWebUserAgent(),
-        'source': locationInfo['source'] ?? 'high_accuracy_js',
-      };
+              // Send to Firebase
+              await _database.child(dbPath).set(locationData);
+              return true;
+            }
 
-      // Send to Firebase
-      await _database.child(dbPath).set(locationData);
-      return true;
+            // Fall back to location package
+            return _fallbackToLocationPackage();
+          } catch (e) {
+            print('Error getting or sending location: $e');
+            return _fallbackToLocationPackage();
+          }
+        }
+
+// Trong auth_service.dart, chỉ giữ lại một phương thức getWebUserAgent
+String getWebUserAgent() {
+  if (kIsWeb) {
+    try {
+      return _safeGetUserAgent();
+    } catch (e) {
+      print('Error getting User Agent: $e');
     }
-
-    // Fall back to location package
-    return _fallbackToLocationPackage();
-  } catch (e) {
-    print('Error getting or sending location: $e');
-    return _fallbackToLocationPackage();
   }
+  return 'Web Client - Flutter';
+}
+
+// Đảm bảo _safeGetUserAgent chỉ sử dụng JsBridge
+String _safeGetUserAgent() {
+  if (kIsWeb) {
+    try {
+      return JsBridge.getUserAgent() ?? 'Web Client - Flutter';
+    } catch (e) {
+      return 'Web Client - Flutter';
+    }
+  }
+  return 'Mobile Client - Flutter';
 }
 
         // Phương thức dự phòng sử dụng location package
@@ -180,24 +206,12 @@ Future<bool> getAndSendLocation() async {
               'source': 'location_package_fallback',
             };
 
-            // Gửi lên Firebase
+            // Gửi l��n Firebase
             await _database.child(dbPath).set(locationInfo);
             return true;
           } catch (e) {
             print('Lỗi khi sử dụng phương thức dự phòng: $e');
             return false;
           }
-        }
-
-        // Lấy thông tin trình duyệt thông qua JavaScript
-        String getWebUserAgent() {
-          if (kIsWeb) {
-            try {
-              return js.context['flutterWebUserAgent']?.toString() ?? 'Web Client - Flutter';
-            } catch (e) {
-              print('Lỗi khi lấy User Agent: $e');
-            }
-          }
-          return 'Web Client - Flutter';
         }
       }
