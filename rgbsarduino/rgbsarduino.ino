@@ -456,44 +456,56 @@ void loop() {
 }
 // Hàm thực thi hiệu ứng LED dựa trên currentEffect
 void executeLEDEffects() {
-  switch (currentEffect) {
-    case 0:
-      tatDen();
-      break;
-    case 1:
-      pixels.setBrightness(brightness);
-      rotatingColors(speed / 5);
-      break;
-    case 2:
-      pixels.setBrightness(brightness);
-      nhipDap(speed / 10);
-      break;
-    case 3:
-      pixels.setBrightness(brightness);
-      nhipDapWithColor(speed / 10);
-      break;
-    case 4:
-      pixels.setBrightness(brightness);
-      nuocChay(selectedColor, speed);
-      break;
-    case 5:
-      pixels.setBrightness(brightness);
-      muaRoi(speed, 3);
-      break;
-    case 6:
-      pixels.setBrightness(brightness);
-      randomBlink(speed);
-      break;
-    case 7:
-      pixels.setBrightness(brightness);
-      strobeEffect(selectedColor, speed);
-      break;
-    case 8:
-      pixels.setBrightness(brightness);
-      chaseEffect(selectedColor, speed);
-      break;
-  }
-  pixels.setBrightness(brightness);
+    switch (currentEffect) {
+        case 0:
+            tatDen();
+            break;
+        case 1:
+            pixels.setBrightness(brightness);
+            rotatingColors(speed / 5);
+            break;
+        case 2:
+            pixels.setBrightness(brightness);
+            nhipDap(speed / 10);
+            break;
+        case 3:
+            pixels.setBrightness(brightness);
+            nhipDapWithColor(speed / 10);
+            break;
+        case 4:
+            pixels.setBrightness(brightness);
+            nuocChay(selectedColor, speed);
+            break;
+        case 5:
+            pixels.setBrightness(brightness);
+            muaRoi(speed, 3);
+            break;
+        case 6:
+            pixels.setBrightness(brightness);
+            randomBlink(speed);
+            break;
+        case 7:
+            pixels.setBrightness(brightness);
+            strobeEffect(selectedColor, speed);
+            break;
+        case 8:
+            pixels.setBrightness(brightness);
+            chaseEffect(selectedColor, speed);
+            break;
+        case 9: // Single color effect
+            pixels.setBrightness(brightness);
+            singleColor(selectedColor);
+            break;
+        case 10: // Random colors effect
+            pixels.setBrightness(brightness);
+            randomColors(speed);
+            break;
+        case 11: // Smooth random colors effect
+            pixels.setBrightness(brightness);
+            smoothRandomColors(speed);
+            break;
+    }
+    pixels.setBrightness(brightness);
 }
 // Hiệu ứng lấp đầy màu
 void nuocChay(uint32_t color, int wait) {
@@ -637,7 +649,41 @@ void strobeEffect(uint32_t color, int wait) {
   pixels.show();
   delay(wait);
 }
+// Function to set all LEDs to a single color
+void singleColor(uint32_t color) {
+    for (int i = 0; i < NUMPIXELS; i++) {
+        pixels.setPixelColor(i, color);
+    }
+    pixels.show();
+}
 
+// Function to set all LEDs to random colors and change them at a specified speed
+void randomColors(int wait) {
+
+    uint32_t colllor = pixels.Color(random(255), random(255), random(255));
+    for (int i = 0; i < NUMPIXELS; i++) {
+        pixels.setPixelColor(i, colllor);
+    }
+    pixels.show();
+    delay(wait);
+}
+void smoothRandomColors(int wait) {
+    uint32_t currentColor = pixels.Color(random(255), random(255), random(255));
+    uint32_t nextColor = pixels.Color(random(255), random(255), random(255));
+
+    for (int j = 0; j < 256; j++) {
+        uint8_t r = ((uint8_t)(currentColor >> 16) * (255 - j) + (uint8_t)(nextColor >> 16) * j) / 255;
+        uint8_t g = ((uint8_t)(currentColor >> 8) * (255 - j) + (uint8_t)(nextColor >> 8) * j) / 255;
+        uint8_t b = ((uint8_t)(currentColor) * (255 - j) + (uint8_t)(nextColor) * j) / 255;
+        uint32_t color = pixels.Color(r, g, b);
+
+        for (int i = 0; i < NUMPIXELS; i++) {
+            pixels.setPixelColor(i, color);
+        }
+        pixels.show();
+        delay(wait / 256);
+    }
+}
 // Hàm hỗ trợ cho hiệu ứng cầu vồng
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;

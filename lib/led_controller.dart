@@ -25,6 +25,9 @@ class _LedControllerState extends State<LedController> {
     'Nhấp nháy ngẫu nhiên',
     'Lấp lánh theo màu',
     'Đuổi màu',
+    'Sáng đơn màu', // Single color effect
+    'Sáng màu ngẫu nhiên', // Random colors effect
+    'Sáng màu ngẫu nhiên mượt', // Smooth random colors effect
   ];
 
   void _updateDatabase(String key, dynamic value) {
@@ -56,7 +59,7 @@ class _LedControllerState extends State<LedController> {
     final colorSnapshot = await _database.child('led/color').once();
     if (colorSnapshot.snapshot.value != null) {
       final Map<dynamic, dynamic> colorMap =
-      colorSnapshot.snapshot.value as Map<dynamic, dynamic>;
+          colorSnapshot.snapshot.value as Map<dynamic, dynamic>;
       setState(() {
         _selectedColor = Color.fromRGBO(
           colorMap['r'] ?? 255,
@@ -67,10 +70,80 @@ class _LedControllerState extends State<LedController> {
       });
     }
   }
+
+  Widget _getEffectColorIndicator(int index) {
+    if (index == 1 ||
+        index == 2 ||
+        index == 4 ||
+        index == 5 ||
+        index == 6 ||
+        index == 10 ||
+        index == 11) {
+      return Container(
+        width: 18, // Giảm kích thước nhẹ
+        height: 18, // Giảm kích thước nhẹ
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.red,
+              Colors.orange,
+              Colors.yellow,
+              Colors.green,
+              Colors.blue,
+              Colors.purple
+            ],
+            stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      width: 18, // Giảm kích thước nhẹ
+      height: 18, // Giảm kích thước nhẹ
+      decoration: BoxDecoration(
+        color: _getEffectColor(index),
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _syncDataFromFirebase();
+  }
+
+  Color _getEffectColor(int effectIndex) {
+    switch (effectIndex) {
+      case 0:
+        return Colors.grey; // Tắt đèn
+      case 1:
+        return Colors.lightBlue; // Cầu vồng
+      case 2:
+        return Colors.lightBlue; // Nhịp đập ngẫu nhiên
+      case 3:
+        return _selectedColor; // Nhịp đập theo màu
+      case 4:
+        return Colors.blue; // Nước chảy
+      case 5:
+        return Colors.lightBlue; // Mưa rơi
+      case 6:
+        return Colors.lightBlue; // Nhấp nháy ngẫu nhiên
+      case 7:
+        return _selectedColor; // Lấp lánh theo màu
+      case 8:
+        return _selectedColor; // Đuổi màu
+      case 9:
+        return _selectedColor; // Sáng đơn màu
+      case 10:
+        return Colors.lightBlue; // Sáng màu ngẫu nhiên
+      case 11:
+        return Colors.lightBlue; // Sáng màu ngẫu nhiên mượt
+      default:
+        return Colors.grey;
+    }
   }
 
   @override
@@ -88,7 +161,7 @@ class _LedControllerState extends State<LedController> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ Colors.white,Color.fromRGBO(33, 150, 243, 1)],
+            colors: [Colors.white, Color.fromRGBO(33, 150, 243, 1)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -101,128 +174,245 @@ class _LedControllerState extends State<LedController> {
               children: [
                 _buildSectionCard(
                   'Hiệu ứng',
-                  Icon(Icons.auto_awesome, color: Theme.of(context).primaryColor),
+                  Icon(Icons.auto_awesome,
+                      color: Theme.of(context).primaryColor),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _currentEffect,
-                        items: List.generate(
-                          effectNames.length,
-                              (index) => DropdownMenuItem<int>(
-                            value: index,
-                            child: Text(
-                              effectNames[index],
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _currentEffect = value!;
-                            _updateDatabase('currentEffect', value);
-                          });
-                        },
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 2.5,
+                        // Giảm tỷ lệ chiều rộng/chiều cao để có thêm không gian cho text
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
                       ),
-                    ),
-                  ),
-                ),
-                _buildSectionCard(
-                  'Độ sáng',
-                  Icon(Icons.brightness_6, color: Theme.of(context).primaryColor),
-                  Column(
-                    children: [
-                      Slider(
-                        value: _brightness,
-                        min: 0,
-                        max: 255,
-                        divisions: 255,
-                        label: _brightness.round().toString(),
-                        onChanged: (value) {
-                          setState(() {
-                            _brightness = value;
-                            _updateDatabase('brightness', value.toInt());
-                          });
-                        },
-                      ),
-                      Text(
-                        '${_brightness.round()}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildSectionCard(
-                  'Tốc độ',
-                  Icon(Icons.speed, color: Theme.of(context).primaryColor),
-                  Column(
-                    children: [
-                      Slider(
-                        value: _speed,
-                        min: 10,
-                        max: 100,
-                        divisions: 90,
-                        label: _speed.round().toString(),
-                        onChanged: (value) {
-                          setState(() {
-                            _speed = value;
-                            _updateDatabase('speed', value.toInt());
-                          });
-                        },
-                      ),
-                      Text(
-                        '${_speed.round()}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildSectionCard2(
-                  'Màu sắc',
-                  Icon(Icons.color_lens, color: Theme.of(context).primaryColor),
-                  Center(
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: () => _showColorPicker(context),
+                      itemCount: effectNames.length,
+                      itemBuilder: (context, index) {
+                        bool isSelected = index == _currentEffect;
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              _currentEffect = index;
+                              _updateDatabase('currentEffect', index);
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
                           child: Container(
-                            width: 60,
-                            height: 60,
                             decoration: BoxDecoration(
-                              color: _selectedColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade300, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: _selectedColor.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey.shade300,
+                                width: isSelected ? 2 : 1,
+                              ),
+                              color: isSelected
+                                  ? Theme.of(context)
+                                      .primaryColor
+                                      .withOpacity(0.1)
+                                  : Colors.white,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              // Thay đổi từ center sang start để căn lề trái
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(left: 8),
+                                  // Thêm padding bên trái
+                                  child: _getEffectColorIndicator(index),
+                                ),
+                                SizedBox(width: 6),
+                                Expanded(
+                                  // Thay Flexible bằng Expanded để sử dụng hết không gian còn lại
+                                  child: Text(
+                                    effectNames[index],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: isSelected
+                                          ? Theme.of(context).primaryColor
+                                          : Colors.black87,
+                                    ),
+                                    softWrap: true, // Cho phép xuống dòng
+                                    maxLines: 2, // Giới hạn tối đa 2 dòng
+                                    overflow: TextOverflow
+                                        .ellipsis, // Vẫn giữ ellipsis nếu vượt quá 2 dòng
+                                  ),
                                 ),
                               ],
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                _buildSectionCard(
+                  'Điều chỉnh',
+                  Icon(Icons.tune, color: Theme.of(context).primaryColor),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Cột bên trái (Độ sáng và Tốc độ)
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Phần Độ sáng
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.brightness_6,
+                                          color: Theme.of(context).primaryColor,
+                                          size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Độ sáng',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  Slider(
+                                    value: _brightness,
+                                    min: 0,
+                                    max: 255,
+                                    divisions: 255,
+                                    label: _brightness.round().toString(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _brightness = value;
+                                        _updateDatabase(
+                                            'brightness', value.toInt());
+                                      });
+                                    },
+                                  ),
+                                  Center(
+                                    child: Text(
+                                      '${_brightness.round()}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 16),
+                              // Phần Tốc độ
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.speed,
+                                          color: Theme.of(context).primaryColor,
+                                          size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Tốc độ',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                  Slider(
+                                    value: _speed,
+                                    min: 10,
+                                    max: 100,
+                                    divisions: 90,
+                                    label: _speed.round().toString(),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _speed = value;
+                                        _updateDatabase('speed', value.toInt());
+                                      });
+                                    },
+                                  ),
+                                  Center(
+                                    child: Text(
+                                      '${_speed.round()}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        // SizedBox(height: 8),
-                        // Text(
-                        //   'Nhấn để chọn màu',
-                        //   style: TextStyle(
-                        //     fontSize: 14,
-                        //     color: Colors.grey.shade600,
-                        //   ),
-                        // ),
+                        // Đường phân cách
+                        Container(
+                          height: 150,
+                          width: 1,
+                          color: Colors.grey.shade300,
+                          margin: EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        // Cột bên phải (Màu sắc)
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.color_lens,
+                                      color: Theme.of(context).primaryColor,
+                                      size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Màu sắc',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              SizedBox(height: 20),
+                              GestureDetector(
+                                onTap: () => _showColorPicker(context),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: _selectedColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.grey.shade300, width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _selectedColor.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Nhấn để chọn màu',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -274,10 +464,13 @@ class _LedControllerState extends State<LedController> {
       ),
     );
   }
+
   Widget _buildSectionCard2(String title, Widget leading, Widget trailing) {
     return Card(
-      color: Colors.white, // Đặt nền trắng
-      elevation: 4, // Tạo hiệu ứng đổ bóng nhẹ
+      color: Colors.white,
+      // Đặt nền trắng
+      elevation: 4,
+      // Tạo hiệu ứng đổ bóng nhẹ
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
       ),
@@ -291,7 +484,9 @@ class _LedControllerState extends State<LedController> {
               children: [
                 leading,
                 SizedBox(width: 10),
-                Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(title,
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -300,8 +495,6 @@ class _LedControllerState extends State<LedController> {
       ),
     );
   }
-
-
 
   void _showColorPicker(BuildContext context) {
     showDialog(
