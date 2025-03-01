@@ -19,59 +19,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     late StreamSubscription<DatabaseEvent> _waterPumpSubscription;
     late StreamSubscription<DatabaseEvent> _timeSubscription;
 
-
-    @override
-    void initState() {
-      super.initState();
-      _setupRealtimeListeners();
-    }
-
-    void _setupRealtimeListeners() {
-      // Lắng nghe hệ thống tự động
-      _autoSystemSubscription = _database.child('status/auto').onValue.listen((event) {
-        if (event.snapshot.value != null) {
-          setState(() {
-            _autoSystem = event.snapshot.value as bool;
-          });
-        }
-      });
-
-      // Lắng nghe đèn lớn
-      _bigLightSubscription = _database.child('status/bigLight').onValue.listen((event) {
-        if (event.snapshot.value != null) {
-          setState(() {
-            _bigLight = event.snapshot.value as bool;
-          });
-        }
-      });
-
-      // Lắng nghe bơm nước
-      _waterPumpSubscription = _database.child('status/waterPump').onValue.listen((event) {
-        if (event.snapshot.value != null) {
-          setState(() {
-            _waterPump = event.snapshot.value as bool;
-          });
-        }
-      });
-
-      // Lắng nghe thời gian
-      _timeSubscription = _database.child('status/time').onValue.listen((event) {
-        if (event.snapshot.value != null) {
-          setState(() {
-            _currentTime = event.snapshot.value as String;
-          });
-        }
-      });
-    }
-
-    @override
-    void dispose() {
-      _autoSystemSubscription.cancel();
-      _bigLightSubscription.cancel();
-      _waterPumpSubscription.cancel();
-      _timeSubscription.cancel();
-      super.dispose();
-    }
     // @override
     // void initState() {
     //   super.initState();
