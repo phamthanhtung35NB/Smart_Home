@@ -1,0 +1,12 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define WIFI_SSID "P302"
+#define WIFI_PASSWORD "0102030405"
+#define API_KEY "AIzaSyA7-rpxAKn4jy9EySyhaoC8JcoZ8MzfGRs"
+#define USER_EMAIL "tungpham010203@gmail.com"
+#define USER_PASSWORD "123123"
+#define DATABASE_URL "https://rgbs-c9ec8-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define PASSWORD "123456"
+
+#endif

@@ -49,4 +49,6 @@ ios/Runner/GoogleService-Info.plist
 ios/Runner/GoogleService-Info-Debug.plist
 firebase.json
 /rgbsarduino/config.h
+/lib/config.dart
+/config.dart
 

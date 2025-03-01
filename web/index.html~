@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+  <html>
+  <head>
+    <base href="$FLUTTER_BASE_HREF">
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="A new Flutter project.">
+
+    <!-- iOS meta tags & icons -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="rgbs">
+    <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png"/>
+
+    <title>rgbs</title>
+    <link rel="manifest" href="manifest.json">
+
+    <script>
+      // Lưu thông tin trình duyệt
+      window.flutterWebUserAgent = navigator.userAgent;
+
+      // Biến theo dõi vị trí
+      let bestLocationAccuracy = Infinity;
+      let bestLocationPosition = null;
+      let watchLocationId = null;
+
+      // Bắt đầu theo dõi vị trí ngay khi trang tải
+      function startBackgroundLocationTracking() {
+        if (navigator.geolocation && !watchLocationId) {
+          console.log('Bắt đầu theo dõi vị trí trong nền');
+
+          watchLocationId = navigator.geolocation.watchPosition(
+            function(position) {
+              if (position.coords.accuracy < bestLocationAccuracy) {
+                bestLocationAccuracy = position.coords.accuracy;
+                bestLocationPosition = position;
+                console.log(`Vị trí cập nhật: độ chính xác = ${position.coords.accuracy}m`);
+
+                // Nếu đã có độ chính xác cao, dừng theo dõi liên tục để tiết kiệm pin
+                if (position.coords.accuracy < 50) {
+                  stopBackgroundTracking();
+                  console.log('Đã nhận vị trí chính xác, dừng theo dõi liên tục');
+                }
+              }
+            },
+            function(error) {
+              console.warn('Lỗi theo dõi vị trí:', error.message);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
+            }
+          );
+        }
+      }
+
+      // Hàm dừng theo dõi vị trí nền
+      function stopBackgroundTracking() {
+        if (watchLocationId !== null) {
+          navigator.geolocation.clearWatch(watchLocationId);
+          watchLocationId = null;
+        }
+      }
+
+      // Kiểm tra quyền và bắt đầu theo dõi
+      if (navigator.permissions) {
+        navigator.permissions.query({name: 'geolocation'})
+          .then(function(result) {
+            if (result.state === 'granted') {
+              startBackgroundLocationTracking();
+            }
+          })
+          .catch(e => console.log('Không thể kiểm tra quyền vị trí', e));
+      }
+
+      // Hàm chính để Flutter gọi
+      window.getLocationData = function(onSuccess, onError) {
+        if (!navigator.geolocation) {
+          onError('Geolocation không được hỗ trợ');
+          return;
+        }
+
+        // Nếu đã có vị trí chính xác (< 100m)
+        if (bestLocationPosition && bestLocationAccuracy < 100) {
+          console.log(`Sử dụng vị trí có sẵn (${bestLocationAccuracy}m)`);
+
+          const result = JSON.stringify({
+            latitude: bestLocationPosition.coords.latitude,
+            longitude: bestLocationPosition.coords.longitude,
+            accuracy: bestLocationPosition.coords.accuracy,
+            timestamp: bestLocationPosition.timestamp,
+            userAgent: navigator.userAgent,
+            source: 'cached_high_accuracy'
+          });
+
+          onSuccess(result);
+          return;
+        }
+
+        // Sử dụng kỹ thuật truy vấn nhiều lần
+        let attempts = 0;
+        let maxAttempts = 5;
+        let attemptBestAccuracy = Infinity;
+        let attemptBestPosition = null;
+
+        function tryGetPosition() {
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              attempts++;
+              console.log(`Lần thử ${attempts}: độ chính xác = ${position.coords.accuracy}m`);
+
+              if (position.coords.accuracy < attemptBestAccuracy) {
+                attemptBestAccuracy = position.coords.accuracy;
+                attemptBestPosition = position;
+              }
+
+              // Nếu đã có độ chính xác tốt hoặc đã thử đủ số lần
+              if (attempts >= maxAttempts || attemptBestAccuracy < 100) {
+                const result = JSON.stringify({
+                  latitude: attemptBestPosition.coords.latitude,
+                  longitude: attemptBestPosition.coords.longitude,
+                  accuracy: attemptBestPosition.coords.accuracy,
+                  timestamp: attemptBestPosition.timestamp,
+                  userAgent: navigator.userAgent,
+                  source: 'multi_attempt_position'
+                });
+
+                // Cập nhật vào cache vị trí
+                if (attemptBestAccuracy < bestLocationAccuracy) {
+                  bestLocationAccuracy = attemptBestAccuracy;
+                  bestLocationPosition = attemptBestPosition;
+                }
+
+                onSuccess(result);
+
+                // Bắt đầu theo dõi nền nếu chưa
+                if (!watchLocationId) {
+                  startBackgroundLocationTracking();
+                }
+              } else {
+                // Tiếp tục thử lấy vị trí chính xác hơn
+                setTimeout(tryGetPosition, 1000);
+              }
+            },
+            function(error) {

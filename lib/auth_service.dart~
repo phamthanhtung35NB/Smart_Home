@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
       import 'package:intl/intl.dart';
       import 'dart:js' as js;
       import 'dart:async';
-import 'js_bridge.dart';
+      
 
       class AuthService {
         final LocalAuthentication _localAuth = LocalAuthentication();
