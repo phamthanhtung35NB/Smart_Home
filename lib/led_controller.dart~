@@ -350,7 +350,7 @@ class _LedControllerState extends State<LedController> {
                       physics: NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 4,
+                        childAspectRatio: 2.5,
                         // Giảm tỷ lệ chiều rộng/chiều cao để có thêm không gian cho text
                         crossAxisSpacing: 5,
                         mainAxisSpacing: 5,
