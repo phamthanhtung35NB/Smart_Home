@@ -82,7 +82,7 @@ class _LedControllerState extends State<LedController> {
       return Container(
         width: 18, // Giảm kích thước nhẹ
         height: 18, // Giảm kích thước nhẹ
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
             colors: [
@@ -177,7 +177,7 @@ class _LedControllerState extends State<LedController> {
                   Icon(Icons.tune, color: Theme.of(context).primaryColor),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(1),
+                    padding: const EdgeInsets.all(1),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -196,8 +196,8 @@ class _LedControllerState extends State<LedController> {
                                       Icon(Icons.brightness_6,
                                           color: Theme.of(context).primaryColor,
                                           size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Độ sáng',
+                                      const SizedBox(width: 8),
+                                      const Text('Độ sáng',
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold)),
                                     ],
@@ -228,7 +228,7 @@ class _LedControllerState extends State<LedController> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 5),
+                              const SizedBox(height: 5),
                               // Phần Tốc độ
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,8 +238,8 @@ class _LedControllerState extends State<LedController> {
                                       Icon(Icons.speed,
                                           color: Theme.of(context).primaryColor,
                                           size: 18),
-                                      SizedBox(width: 8),
-                                      Text('Tốc độ',
+                                      const SizedBox(width: 8),
+                                      const Text('Tốc độ',
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold)),
                                     ],
@@ -277,7 +277,7 @@ class _LedControllerState extends State<LedController> {
                           height: 150,
                           width: 1,
                           color: Colors.grey.shade300,
-                          margin: EdgeInsets.symmetric(horizontal: 1),
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
                         ),
                         // Cột bên phải (Màu sắc)
                         Expanded(
@@ -291,13 +291,13 @@ class _LedControllerState extends State<LedController> {
                                   Icon(Icons.color_lens,
                                       color: Theme.of(context).primaryColor,
                                       size: 20),
-                                  SizedBox(width: 4),
-                                  Text('Màu sắc',
+                                  const SizedBox(width: 4),
+                                  const Text('Màu sắc',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold)),
                                 ],
                               ),
-                              SizedBox(height: 25),
+                              const SizedBox(height: 25),
                               GestureDetector(
                                 onTap: () => _showColorPicker(context),
                                 child: Container(
@@ -318,7 +318,7 @@ class _LedControllerState extends State<LedController> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 25),
+                              const SizedBox(height: 25),
                               Text(
                                 'Nhấn để chọn màu',textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -340,17 +340,17 @@ class _LedControllerState extends State<LedController> {
                       color: Theme.of(context).primaryColor),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: GridView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 2.5,
+                        childAspectRatio: 4,
                         // Giảm tỷ lệ chiều rộng/chiều cao để có thêm không gian cho text
                         crossAxisSpacing: 5,
                         mainAxisSpacing: 5,
@@ -386,11 +386,11 @@ class _LedControllerState extends State<LedController> {
                               // Thay đổi từ center sang start để căn lề trái
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.only(left: 8),
+                                  padding: const EdgeInsets.only(left: 8),
                                   // Thêm padding bên trái
                                   child: _getEffectColorIndicator(index),
                                 ),
-                                SizedBox(width: 6),
+                                const SizedBox(width: 6),
                                 Expanded(
                                   // Thay Flexible bằng Expanded để sử dụng hết không gian còn lại
                                   child: Text(
@@ -428,8 +428,8 @@ class _LedControllerState extends State<LedController> {
 
   Widget _buildSectionCard(String title, Icon icon, Widget content) {
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -438,7 +438,7 @@ class _LedControllerState extends State<LedController> {
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -448,7 +448,7 @@ class _LedControllerState extends State<LedController> {
           Row(
             children: [
               icon,
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
@@ -459,7 +459,7 @@ class _LedControllerState extends State<LedController> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           content,
         ],
       ),
@@ -475,7 +475,7 @@ class _LedControllerState extends State<LedController> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12), // Bo góc đẹp hơn
       ),
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -484,10 +484,10 @@ class _LedControllerState extends State<LedController> {
             Row(
               children: [
                 leading,
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Text(title,
                     style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -502,7 +502,7 @@ class _LedControllerState extends State<LedController> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Chọn màu'),
+          title: const Text('Chọn màu'),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: _selectedColor,
@@ -523,7 +523,7 @@ class _LedControllerState extends State<LedController> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+              child:  const Text('OK'),
             ),
           ],
           shape: RoundedRectangleBorder(

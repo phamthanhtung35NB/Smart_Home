@@ -254,8 +254,10 @@ void updateTemperature(FirebaseData *fbdo) {
         struct tm *ptm = gmtime((time_t * ) & epochTime);
         int currentHour = timeClient.getHours();
         int currentMinute = timeClient.getMinutes();
+        int currentSecond = timeClient.getSeconds();
         String currentTime =
-                String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") + String(currentMinute);
+                String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
+                String(currentMinute) + ":" + String(currentSecond);
         Firebase.RTDB.setString(fbdo, "/aquarium/time", currentTime);
         Serial.print("Updated temperature to Firebase: ");
         Serial.println(temperature);
@@ -366,6 +368,7 @@ void autoRunSystem() {
 
         int currentHour = timeClient.getHours();
         int currentMinute = timeClient.getMinutes();
+        int currentSecond = timeClient.getSeconds();
 
         Serial.println("🕒 Time: " + String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
                        String(currentMinute));
@@ -374,9 +377,11 @@ void autoRunSystem() {
             timeClient.forceUpdate();
             currentHour = timeClient.getHours();
             currentMinute = timeClient.getMinutes();
+            currentSecond = timeClient.getSeconds();
 
+            //cập nhật cả giây
             String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
-                                 String(currentMinute);
+                                 String(currentMinute) + ":" + String(currentSecond);
             Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
             initTimeUpFirebase = true;
         }
@@ -385,9 +390,10 @@ void autoRunSystem() {
             timeClient.forceUpdate();
             currentHour = timeClient.getHours();
             currentMinute = timeClient.getMinutes();
+            currentSecond = timeClient.getSeconds();
 
             String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
-                                 String(currentMinute);
+                                 String(currentMinute) + ":" + String(currentSecond);
             Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
             delay(60000);
         }

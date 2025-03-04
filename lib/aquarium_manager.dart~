@@ -226,8 +226,8 @@ class _AquariumManagerState extends State<AquariumManager> {
                 leading,
                 const SizedBox(width: 10),
                 Text(title,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                    style:
+                        const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -259,8 +259,8 @@ class _AquariumManagerState extends State<AquariumManager> {
                     const SizedBox(width: 10),
                     Text(
                       title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
