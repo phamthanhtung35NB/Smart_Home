@@ -15,10 +15,13 @@ class _AquariumManagerState extends State<AquariumManager> {
   bool _waterPump = false;
   double _airPumpSpeed = 0.0;
   double _temperature = 0.0;
+  String _currentTime = '';
   late StreamSubscription<DatabaseEvent> _temperatureSubscription;
   late StreamSubscription<DatabaseEvent> _bigLightSubscription;
   late StreamSubscription<DatabaseEvent> _waterPumpSubscription;
   late StreamSubscription<DatabaseEvent> _airPumpSpeedSubscription;
+  late StreamSubscription<DatabaseEvent> _timeSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -27,7 +30,8 @@ class _AquariumManagerState extends State<AquariumManager> {
 
   void _setupRealtimeListeners() {
     // Lắng nghe nhiệt độ
-    _temperatureSubscription = _database.child('aquarium/temperature').onValue.listen((event) {
+    _temperatureSubscription =
+        _database.child('aquarium/temperature').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
@@ -36,7 +40,8 @@ class _AquariumManagerState extends State<AquariumManager> {
     });
 
     // Lắng nghe đèn hồ cá
-    _bigLightSubscription = _database.child('aquarium/bigLight').onValue.listen((event) {
+    _bigLightSubscription =
+        _database.child('aquarium/bigLight').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _bigLight = event.snapshot.value as bool;
@@ -45,7 +50,8 @@ class _AquariumManagerState extends State<AquariumManager> {
     });
 
     // Lắng nghe bơm nước
-    _waterPumpSubscription = _database.child('aquarium/waterPump').onValue.listen((event) {
+    _waterPumpSubscription =
+        _database.child('aquarium/waterPump').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _waterPump = event.snapshot.value as bool;
@@ -54,10 +60,20 @@ class _AquariumManagerState extends State<AquariumManager> {
     });
 
     // Lắng nghe tốc độ bơm không khí
-    _airPumpSpeedSubscription = _database.child('aquarium/airPumpSpeed').onValue.listen((event) {
+    _airPumpSpeedSubscription =
+        _database.child('aquarium/airPumpSpeed').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _airPumpSpeed = (event.snapshot.value as num).toDouble();
+        });
+      }
+    });
+    // Lắng nghe thời gian
+    _timeSubscription =
+        _database.child('aquarium/time').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _currentTime = event.snapshot.value as String;
         });
       }
     });
@@ -69,11 +85,14 @@ class _AquariumManagerState extends State<AquariumManager> {
     _bigLightSubscription.cancel();
     _waterPumpSubscription.cancel();
     _airPumpSpeedSubscription.cancel();
+    _timeSubscription.cancel();
     super.dispose();
   }
+
   void _updateDatabase(String key, dynamic value) {
     _database.child('aquarium/$key').set(value);
   }
+
   // void _syncDataFromFirebase() async {
   //   final bigLightSnapshot = await _database.child('aquarium/bigLight').once();
   //   if (bigLightSnapshot.snapshot.value != null) {
@@ -111,15 +130,13 @@ class _AquariumManagerState extends State<AquariumManager> {
   //   _database.child('aquarium/$key').set(value);
   // }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [ Colors.white,Color.fromRGBO(33, 150, 243, 1)],
+            colors: [Colors.white, Color.fromRGBO(33, 150, 243, 1)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -128,7 +145,7 @@ class _AquariumManagerState extends State<AquariumManager> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            buildSectionCard2(
+            buildSectionCardCurrent(
               'Nhiệt độ bể cá',
               Icon(Icons.thermostat, color: Theme.of(context).primaryColor),
               (() {
@@ -265,6 +282,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     );
   }
 
+  //
   Widget buildSectionCard2(String title, Widget leading, Widget trailing) {
     return Card(
       color: Colors.white,
@@ -284,10 +302,52 @@ class _AquariumManagerState extends State<AquariumManager> {
                 SizedBox(width: 10),
                 Text(title,
                     style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildSectionCardCurrent(
+      String title, Widget leading, Widget trailing) {
+    return Card(
+      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      margin: EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              'Current Time: $_currentTime',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    leading,
+                    SizedBox(width: 10),
+                    Text(
+                      title,
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                trailing,
+              ],
+            ),
           ],
         ),
       ),

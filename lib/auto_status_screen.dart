@@ -144,11 +144,11 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              Text(
-                'Current Time: $_currentTime',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 20),
+            Text(
+              'Current Time: $_currentTime',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
               _buildStatusCard('Big Light', _bigLight),
               _buildStatusCard('Water Pump', _waterPump),
               SizedBox(height: 20),
