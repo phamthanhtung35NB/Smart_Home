@@ -16,9 +16,11 @@ class _AquariumManagerState extends State<AquariumManager> {
   bool _waterPump = false;
   double _airPumpSpeed = 0.0;
   double _temperature = 0.0;
+  double _temperatureOld = 0.0;
   String _currentTime = '';
   late Timer _timer;
   late StreamSubscription<DatabaseEvent> _temperatureSubscription;
+  late StreamSubscription<DatabaseEvent> _temperatureSubscriptionOld;
   late StreamSubscription<DatabaseEvent> _bigLightSubscription;
   late StreamSubscription<DatabaseEvent> _waterPumpSubscription;
   late StreamSubscription<DatabaseEvent> _airPumpSpeedSubscription;
@@ -38,6 +40,16 @@ class _AquariumManagerState extends State<AquariumManager> {
       if (event.snapshot.value != null) {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
+        });
+      }
+    });
+
+    // Lắng nghe nhiệt độ cũ
+    _temperatureSubscriptionOld =
+        _database.child('aquarium/temperatureOld').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _temperatureOld = (event.snapshot.value as num).toDouble();
         });
       }
     });
@@ -96,6 +108,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     _waterPumpSubscription.cancel();
     _airPumpSpeedSubscription.cancel();
     _timeSubscription.cancel();
+    _temperatureSubscriptionOld.cancel();
     _timer.cancel();
     super.dispose();
   }
@@ -297,12 +310,7 @@ class _AquariumManagerState extends State<AquariumManager> {
                 ),
               ],
             ),
-            const Divider(
-              color: Colors.grey,
-              thickness: 1, //đây là thông số độ dày
-              indent: 5, //đây là thông số khoảng cách bên trái
-              endIndent: 5, //đây là thông số khoảng cách bên phải
-            ),
+
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Text(
                 'Lúc: ',
@@ -320,6 +328,35 @@ class _AquariumManagerState extends State<AquariumManager> {
                 textAlign: TextAlign.center,
               ),
             ]),
+            const Divider(
+              color: Colors.grey,
+              thickness: 1, //đây là thông số độ dày
+              indent: 5, //đây là thông số khoảng cách bên trái
+              endIndent: 5, //đây là thông số khoảng cách bên phải
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Flexible(
+                  child: Text(
+                    'Nhiệt độ trước đó: ',
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Text(
+                  '${_temperatureOld.toStringAsFixed(3)} °C',
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueAccent),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
           ],
         ),
       ),

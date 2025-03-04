@@ -218,7 +218,7 @@ void setup() {
         sensors.begin();
         Serial.println("Temperature sensor started");
 
-        updateTemperature(&fbdo);  // Truyền tham số fbdo
+        updateTemperature(&fbdo, lastTemperature);  // Truyền tham số fbdo
         Serial.println("Initial temperature data pushed");
     } else {
         Serial.println("Cannot proceed without WiFi connection.");
@@ -244,10 +244,12 @@ void updateLamp() {
 }
 
 // Cập nhật nhiệt độ lên Firebase
-void updateTemperature(FirebaseData *fbdo) {
-    float temperature = sensors.getTempCByIndex(0);
+void updateTemperature(FirebaseData *fbdo,float temperature) {
     if (temperature != -127.00) {
         Firebase.RTDB.setFloat(fbdo, "/aquarium/temperature", temperature);
+        Firebase.RTDB.setFloat(fbdo, "/aquarium/temperatureOld", lastTemperature);
+        // Cập nhật nhiệt độ cuối cùng
+        lastTemperature = temperature;
         //up date thơi gian
         timeClient.forceUpdate();
         unsigned long epochTime = timeClient.getEpochTime();
@@ -438,9 +440,7 @@ void getTemperatures() {
             Serial.print(" -> ");
             Serial.print(currentTemperature);
             Serial.println(" °C");
-
-            lastTemperature = currentTemperature;
-            updateTemperature(&fbdo);  // Truyền tham số fbdo
+            updateTemperature(&fbdo, currentTemperature);  // Truyền tham số fbdo
         }
     }
 }
