@@ -149,15 +149,6 @@ class _LedControllerState extends State<LedController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      // title: Text(
-      //   'LED Controller',
-      //   style: TextStyle(fontWeight: FontWeight.bold),
-      // ),
-      // elevation: 0,
-      // centerTitle: true,
-      // backgroundColor: Theme.of(context).primaryColor,
-      // ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -166,10 +157,8 @@ class _LedControllerState extends State<LedController> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
+        padding: const EdgeInsets.only(top: 30, left: 10, right: 10),
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildSectionCard(
@@ -424,8 +413,6 @@ class _LedControllerState extends State<LedController> {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 

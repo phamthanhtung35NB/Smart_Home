@@ -149,15 +149,6 @@ class _LedControllerState extends State<LedController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      // title: Text(
-      //   'LED Controller',
-      //   style: TextStyle(fontWeight: FontWeight.bold),
-      // ),
-      // elevation: 0,
-      // centerTitle: true,
-      // backgroundColor: Theme.of(context).primaryColor,
-      // ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -166,10 +157,8 @@ class _LedControllerState extends State<LedController> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
+        padding: const EdgeInsets.only(top: 30, left: 10, right: 10),
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildSectionCard(
@@ -320,12 +309,12 @@ class _LedControllerState extends State<LedController> {
                               ),
                               const SizedBox(height: 25),
                               Text(
-                                'Nhấn để chọn màu',textAlign: TextAlign.center,
+                                'Nhấn để chọn màu',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
                                   fontWeight: FontWeight.bold,
-
                                 ),
                               ),
                             ],
@@ -334,13 +323,15 @@ class _LedControllerState extends State<LedController> {
                       ],
                     ),
                   ),
-                ),_buildSectionCard(
+                ),
+                _buildSectionCard(
                   'Hiệu ứng',
                   Icon(Icons.auto_awesome,
                       color: Theme.of(context).primaryColor),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.shade300),
@@ -348,7 +339,8 @@ class _LedControllerState extends State<LedController> {
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         childAspectRatio: 4,
                         // Giảm tỷ lệ chiều rộng/chiều cao để có thêm không gian cho text
@@ -377,8 +369,8 @@ class _LedControllerState extends State<LedController> {
                               ),
                               color: isSelected
                                   ? Theme.of(context)
-                                  .primaryColor
-                                  .withOpacity(0.1)
+                                      .primaryColor
+                                      .withOpacity(0.1)
                                   : Colors.white,
                             ),
                             child: Row(
@@ -421,9 +413,6 @@ class _LedControllerState extends State<LedController> {
               ],
             ),
           ),
-        ),
-      ),
-    );
   }
 
   Widget _buildSectionCard(String title, Icon icon, Widget content) {
@@ -486,8 +475,8 @@ class _LedControllerState extends State<LedController> {
                 leading,
                 const SizedBox(width: 10),
                 Text(title,
-                    style:
-                        const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
             trailing,
@@ -523,7 +512,7 @@ class _LedControllerState extends State<LedController> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child:  const Text('OK'),
+              child: const Text('OK'),
             ),
           ],
           shape: RoundedRectangleBorder(
