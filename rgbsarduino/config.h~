@@ -1,0 +1,72 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include <Adafruit_NeoPixel.h>
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
+#define WIFI_SSID "P302"
+#define WIFI_PASSWORD "0102030405"
+#define API_KEY "AIzaSyA7-rpxAKn4jy9EySyhaoC8JcoZ8MzfGRs"
+#define USER_EMAIL "tungpham010203@gmail.com"
+#define USER_PASSWORD "123123"
+#define DATABASE_URL "https://rgbs-c9ec8-default-rtdb.asia-southeast1.firebasedatabase.app/"
+
+
+// Cấu hình thời gian
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "time.google.com", 25200, 60000);
+
+// Biến kiểm tra hệ thống tự động măc định là tự động
+bool autoSystem = true;
+bool initTimeUpFirebase = false;  // Declare initTimeUpFirebase
+
+// Cấu hình cảm biến nhiệt độ DS18B20
+#define ONE_WIRE_BUS 23
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+float lastTemperature = -127.00;
+
+// Cấu hình WiFi
+const char *ssid = WIFI_SSID;
+const char *password = WIFI_PASSWORD;
+
+// Cấu hình Firebase
+FirebaseConfig configF;
+FirebaseAuth auth;
+FirebaseData fbdo;
+FirebaseData fbdo_status;
+FirebaseData fbdo_led;
+FirebaseData fbdo_lamp;
+FirebaseData fbdo_aquarium;
+
+// Cấu hình NeoPixel led rgb
+#define LED_PIN 4
+#define NUMPIXELS 18
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+// Khởi tạo trạng thái ban đầu trước khi update data từ Firebase
+int brightness = 200;
+int speed = 50;
+uint32_t selectedColor = pixels.Color(255, 0, 0);
+int currentEffect = 0;
+
+bool is_bom = true;
+bool is_led = true;
+bool lampState = true;
+bool levelLampHighState = true;
+bool wifiState = false;
+
+int airPumpSpeed = 5;
+const int ena = 5;
+const int bomKKLow = 18;
+const int LedBeLow = 19;
+const int lamp = 21;
+const int levelLampHigh = 22;
+
+
+#endif

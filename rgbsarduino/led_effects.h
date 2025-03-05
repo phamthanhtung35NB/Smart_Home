@@ -20,9 +20,6 @@ uint32_t Wheel(byte WheelPos);  // Declare Wheel function
 
 void executeLEDEffects() {
     switch (currentEffect) {
-        case 0:
-            tatDen();
-            break;
         case 1:
             pixels.setBrightness(brightness);
             rotatingColors(speed / 5);
