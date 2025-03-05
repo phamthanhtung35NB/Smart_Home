@@ -234,9 +234,9 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         if (autoSystem == true) {
             if (is_bom == true) {
                 //sửa lại giá trị trên firebase vì đang bật chế độ tự động
-                Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", false);
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
             } else {
-                Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", true);
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
             }
         } else if (autoSystem == false) {
             if (is_bom == true) {

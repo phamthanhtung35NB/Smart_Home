@@ -8,8 +8,8 @@ void updateLamp();  // Declare updateLamp function
 void handleFirebaseStream(FirebaseData *fbdo);  // Declare handleFirebaseStream function
 
 /**
- * Khơi tạo Firebase
- */
+ * Khởi tạo Firebase
+ *
  * Callback khi token hết hạn
  * @param status
  * @param id
@@ -38,7 +38,11 @@ void initFirebase() {
         Serial.println("Firebase streams initialized successfully.");
     }
 }
-
+void updateAquarium() {
+    Firebase.RTDB.setBool(&fbdo_aquarium, "/aquarium/waterPump", is_bom);
+    Firebase.RTDB.setBool(&fbdo_aquarium, "/aquarium/bigLight", is_led);
+    Firebase.RTDB.setInt(&fbdo_aquarium, "/aquarium/airPumpSpeed", airPumpSpeed);
+}
 /**
  * Đồng bộ dữ liệu từ Firebase khi vừa kết nối
  * @param fbdo FirebaseData
