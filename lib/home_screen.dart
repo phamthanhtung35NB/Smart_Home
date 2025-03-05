@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/widgets/custom_drawer.dart';
 import 'package:rgbs/widgets/bottom_app_bar.dart';
-import 'package:provider/provider.dart';
-import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/led_controller.dart';
 import 'package:rgbs/aquarium_manager.dart';
-import 'package:rgbs/lamp_controller.dart';
-import 'package:rgbs/auto_status_screen.dart'; // Import the new screen
+import 'package:rgbs/auto_status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -14,36 +12,72 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  Widget _getSelectedScreen() {
-    switch (_selectedIndex) {
-      case 0:
-        return AutoStatusScreen(); // Add the new screen to the navigation
-      case 1:
-        return AquariumManager();
-      case 2:
-        return LedController();
-      // case 3:
-      //   return LampController();
-      default:
-        return  AutoStatusScreen(); // Add the new screen to the navigation
-    }
-  }
+  int _selectedIndex = 1; // ✅ Mặc định là Trang chủ
+  String _title = 'Smart Home';
+  PageController _pageController = PageController(initialPage: 1); // ✅ Bắt đầu từ trang home
 
   void _onTabSelected(int index) {
     setState(() {
       _selectedIndex = index;
+      switch (index) {
+        case 0:
+          _title = 'Điều khiển bể cá';
+          break;
+        case 1:
+          _title = 'Tự động';
+          break;
+        case 2:
+          _title = 'Điều khiển Led RGB';
+          break;
+      }
     });
+    _pageController.jumpToPage(index);
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+      switch (index) {
+        case 0:
+          _title = 'Điều khiển bể cá';
+          break;
+        case 1:
+          _title = 'Tự động';
+          break;
+        case 2:
+          _title = 'Điều khiển Led RGB';
+          break;
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _onPageChanged(_selectedIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarScreen(title: 'Smart Home'),
+      appBar: AppBarScreen(
+        title: (_title),
+      ),
       drawer: CustomDrawer(),
-      body: _getSelectedScreen(),
-      bottomNavigationBar: BottomAppBarWidget(onTabSelected: _onTabSelected),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: [
+          AquariumManager(),
+          AutoStatusScreen(), // ✅ Trang Home đầu tiên
+          LedController(),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBarWidget(
+        key: ValueKey(_selectedIndex),
+        onTabSelected: _onTabSelected,
+        selectedIndex: _selectedIndex,
+      ),
     );
   }
 }

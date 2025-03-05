@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
-      import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
-      class BottomAppBarWidget extends StatelessWidget {
-        final Function(int) onTabSelected;
+class BottomAppBarWidget extends StatelessWidget {
+  final Function(int) onTabSelected;
+  final int selectedIndex;
 
-        const BottomAppBarWidget({super.key, required this.onTabSelected});
+  const BottomAppBarWidget({
+    super.key,
+    required this.onTabSelected,
+    required this.selectedIndex,
+  });
 
-        @override
-        Widget build(BuildContext context) {
-          return ConvexAppBar(
-            style: TabStyle.reactCircle,
-            items: [
-              TabItem(icon: Icons.home, title: 'Auto Status'),
-              TabItem(icon: Icons.pets, title: 'Aquarium'),
-              TabItem(icon: Icons.auto_awesome, title: 'Led Controller'),
-              // TabItem(icon: Icons.lightbulb, title: 'Lamp'),
-            ],
-            initialActiveIndex: 0,
-            onTap: onTabSelected,
-          );
-        }
-      }
+  @override
+  Widget build(BuildContext context) {
+    return ConvexAppBar(
+      key: ValueKey(selectedIndex),
+      style: TabStyle.reactCircle,
+      // activeColor: Colors.blue,
+      items: [
+        TabItem(icon: Icons.pets, title: ''),
+        TabItem(icon: Icons.home, title: ''), // ✅ Trang Home đầu tiên
+        TabItem(icon: Icons.auto_awesome, title: ''),
+      ],
+      initialActiveIndex: selectedIndex,
+      onTap: onTabSelected,
+    );
+  }
+}
