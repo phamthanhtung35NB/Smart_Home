@@ -8,8 +8,8 @@ void updateLamp();  // Declare updateLamp function
 void handleFirebaseStream(FirebaseData *fbdo);  // Declare handleFirebaseStream function
 
 /**
- * Khởi tạo Firebase
- *
+ * Khơi tạo Firebase
+ */
  * Callback khi token hết hạn
  * @param status
  * @param id

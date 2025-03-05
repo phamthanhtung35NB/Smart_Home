@@ -3,6 +3,7 @@
 
 #include <DallasTemperature.h>
 #include "config.h"
+#include "config.h"
 
 void updateTemperature(FirebaseData *fbdo, float temperature) {
     if (temperature != -127.00) {
@@ -25,7 +26,19 @@ void updateTemperature(FirebaseData *fbdo, float temperature) {
 void getTemperatures() {
     sensors.requestTemperatures();
     float temperatureC = sensors.getTempCByIndex(0);
-    updateTemperature(&fbdo, temperatureC);
+    if (temperatureC == -127.00) {
+        sensors.begin();
+        Serial.println("⚠️ Error: DS18B20 sensor not found!");
+    } else {
+        if (abs(temperatureC - lastTemperature) > 0.1) {
+            Serial.print("🌡️ Temperature: ");
+            Serial.print(lastTemperature);
+            Serial.print(" -> ");
+            Serial.print(temperatureC);
+            Serial.println(" °C");
+            updateTemperature(&fbdo, temperatureC);  // Truyền tham số fbdo
+        }
+    }
 }
 
 #endif

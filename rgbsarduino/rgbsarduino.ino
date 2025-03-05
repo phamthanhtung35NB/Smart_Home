@@ -94,6 +94,9 @@ void blinkLED(int pin, int times, int delayTime) {
     }
 }
 
+/**
+ * Hàm chạy hệ thống tự động
+ */
 void autoRunSystem() {
     if (timeClient.isTimeSet()) {
         unsigned long epochTime = timeClient.getEpochTime();
@@ -178,10 +181,14 @@ void autoRunSystem() {
     }
 }
 
+/**
+ * Xử lý dữ liệu từ Firebase Stream
+ * @param fbdo FirebaseData
+ */
 void handleFirebaseStream(FirebaseData *fbdo) {
     String path = fbdo->dataPath();
-    Serial.print("Stream path: ");
-    Serial.println(path);
+//    Serial.print("Stream path: ");
+//    Serial.println(path);
     // /status/auto
     if (path == "/auto") {
         autoSystem = fbdo->boolData();
@@ -195,10 +202,18 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         // /aquarium/bigLight
     else if (path == "/bigLight") {
         is_led = fbdo->boolData();
-        if (is_led == true && autoSystem == false) {
-            digitalWrite(LedBeLow, LOW);
-        } else if (is_led == false && autoSystem == false) {
-            digitalWrite(LedBeLow, HIGH);
+        if (autoSystem == true) {
+            if (is_led == true) {
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
+            } else {
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
+            }
+        } else if (autoSystem == false) {
+            if (is_led == true) {
+                digitalWrite(LedBeLow, LOW);
+            } else if (is_led == false) {
+                digitalWrite(LedBeLow, HIGH);
+            }
         }
     }
         // /led/currentEffect
@@ -215,10 +230,20 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         is_bom = fbdo->boolData();
         Serial.print("is_bom: ");
         Serial.println(is_bom);
-        if (is_bom == true && autoSystem == false) {
-            digitalWrite(bomKKLow, LOW);
-        } else if (is_bom == false && autoSystem == false) {
-            digitalWrite(bomKKLow, HIGH);
+        //is_bom = true -> LOW (bật bơm)
+        if (autoSystem == true) {
+            if (is_bom == true) {
+                //sửa lại giá trị trên firebase vì đang bật chế độ tự động
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
+            } else {
+                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
+            }
+        } else if (autoSystem == false) {
+            if (is_bom == true) {
+                digitalWrite(bomKKLow, LOW);
+            } else {
+                digitalWrite(bomKKLow, HIGH);
+            }
         }
     }
         // /led/brightness
