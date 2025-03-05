@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
               TabItem(icon: Icons.home, title: 'Auto Status'),
               TabItem(icon: Icons.pets, title: 'Aquarium'),
               TabItem(icon: Icons.auto_awesome, title: 'Led Controller'),
-              TabItem(icon: Icons.lightbulb, title: 'Lamp'),
+              // TabItem(icon: Icons.lightbulb, title: 'Lamp'),
             ],
             initialActiveIndex: 0,
             onTap: onTabSelected,

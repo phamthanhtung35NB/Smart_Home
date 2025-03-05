@@ -236,7 +236,7 @@ class _LedControllerState extends State<LedController> {
                                   Slider(
                                     value: _speed,
                                     min: 1,
-                                    max: 100,
+                                    max: 200,
                                     divisions: 90,
                                     label: _speed.round().toString(),
                                     onChanged: (value) {

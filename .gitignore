@@ -72,5 +72,8 @@ config.dart
 config.h*
 config.h~
 
+#bỏ qua file backup
+*.dart~
+*~
 
 

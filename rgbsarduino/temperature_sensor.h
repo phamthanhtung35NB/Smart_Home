@@ -19,7 +19,7 @@ void updateTemperature(FirebaseData *fbdo, float temperature) {
         String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
                              String(currentMinute) + ":" + String(currentSecond);
         Firebase.RTDB.setString(fbdo, "/aquarium/time", currentTime);
-        Firebase.RTDB.setInt(fbdo, "/aquarium/epochTime", epochTime);
+        // Firebase.RTDB.setInt(fbdo, "/aquarium/epochTime", epochTime);
     }
 }
 

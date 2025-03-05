@@ -23,10 +23,10 @@ void setup() {
     digitalWrite(LedBeLow, HIGH);
     pinMode(ena, OUTPUT);
     pinMode(bomKKLow, OUTPUT);
-    pinMode(lamp, OUTPUT);
-    digitalWrite(lamp, HIGH);
-    pinMode(levelLampHigh, OUTPUT);
-    digitalWrite(levelLampHigh, HIGH);
+//    pinMode(lamp, OUTPUT);
+//    digitalWrite(lamp, HIGH);
+//    pinMode(levelLampHigh, OUTPUT);
+//    digitalWrite(levelLampHigh, HIGH);
 
     if (initWifi()) {
         Serial.println("WiFi connected");
@@ -71,7 +71,7 @@ void loop() {
     if (Firebase.ready()) {
         checkFirebaseStream(&fbdo_status);
         checkFirebaseStream(&fbdo_led);
-        checkFirebaseStream(&fbdo_lamp);
+//        checkFirebaseStream(&fbdo_lamp);
         checkFirebaseStream(&fbdo_aquarium);
     }
     delay(100);
@@ -196,13 +196,13 @@ void handleFirebaseStream(FirebaseData *fbdo) {
     // /status/auto
     if (path == "/auto") {
         autoSystem = fbdo->boolData();
-        updateLamp();
+//        updateLamp();
     }
         // /lamp/status
-    else if (path == "/status") {
-        lampState = fbdo->boolData();
-        updateLamp();
-    }
+//    else if (path == "/status") {
+//        lampState = fbdo->boolData();
+//        updateLamp();
+//    }
         // /aquarium/bigLight
     else if (path == "/bigLight") {
         is_led = fbdo->boolData();
@@ -231,11 +231,11 @@ void handleFirebaseStream(FirebaseData *fbdo) {
 
         }
     }
-        // /lamp/level
-    else if (path == "/level") {
-        levelLampHighState = fbdo->boolData();
-        updateLamp();
-    }
+//        // /lamp/level
+//    else if (path == "/level") {
+//        levelLampHighState = fbdo->boolData();
+//        updateLamp();
+//    }
         // aquarium/waterPump
     else if (path == "/waterPump") {
         is_bom = fbdo->boolData();
@@ -296,17 +296,17 @@ void handleFirebaseStream(FirebaseData *fbdo) {
     }
 }
 
-// Cập nhật trạng thái đèn bàn học
-void updateLamp() {
-    if (lampState == true) {
-        digitalWrite(lamp, LOW);  // Tắt đèn
-    } else {
-        digitalWrite(lamp, HIGH);  // Bật đèn
-    }
-
-    if (levelLampHighState == true) {
-        digitalWrite(levelLampHigh, LOW);  // Tắt đèn
-    } else {
-        digitalWrite(levelLampHigh, HIGH);  // Bật đèn
-    }
-}
+//// Cập nhật trạng thái đèn bàn học
+//void updateLamp() {
+//    if (lampState == true) {
+//        digitalWrite(lamp, LOW);  // Tắt đèn
+//    } else {
+//        digitalWrite(lamp, HIGH);  // Bật đèn
+//    }
+//
+//    if (levelLampHighState == true) {
+//        digitalWrite(levelLampHigh, LOW);  // Tắt đèn
+//    } else {
+//        digitalWrite(levelLampHigh, HIGH);  // Bật đèn
+//    }
+//}

@@ -4,7 +4,7 @@
 #include <Firebase_ESP_Client.h>
 #include "config.h"
 
-void updateLamp();  // Declare updateLamp function
+//void updateLamp();  // Declare updateLamp function
 void handleFirebaseStream(FirebaseData *fbdo);  // Declare handleFirebaseStream function
 
 /**
@@ -29,7 +29,7 @@ void initFirebase() {
 
     success &= Firebase.RTDB.beginStream(&fbdo_status, "/status");
     success &= Firebase.RTDB.beginStream(&fbdo_led, "/led");
-    success &= Firebase.RTDB.beginStream(&fbdo_lamp, "/lamp");
+//    success &= Firebase.RTDB.beginStream(&fbdo_lamp, "/lamp");
     success &= Firebase.RTDB.beginStream(&fbdo_aquarium, "/aquarium");
 
     if (!success) {
@@ -47,14 +47,14 @@ void _syncDataFromFirebase(FirebaseData *fbdo) {
     if (Firebase.RTDB.getBool(fbdo, "/status/auto")) {
         autoSystem = fbdo->boolData();
     }
-    if (Firebase.RTDB.getBool(fbdo, "/lamp/status")) {
-        lampState = fbdo->boolData();
-        updateLamp();
-    }
-    if (Firebase.RTDB.getBool(fbdo, "/lamp/level")) {
-        levelLampHighState = fbdo->boolData();
-        updateLamp();
-    }
+//    if (Firebase.RTDB.getBool(fbdo, "/lamp/status")) {
+//        lampState = fbdo->boolData();
+//        updateLamp();
+//    }
+//    if (Firebase.RTDB.getBool(fbdo, "/lamp/level")) {
+//        levelLampHighState = fbdo->boolData();
+//        updateLamp();
+//    }
     if (Firebase.RTDB.getBool(fbdo, "/aquarium/waterPump")) {
         is_bom = fbdo->boolData();
         digitalWrite(bomKKLow, is_bom ? LOW : HIGH);
