@@ -141,29 +141,61 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                   // căn giữa các phần tử
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      color: _autoSystem ? Colors.green.shade50 : Colors.grey,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _autoSystem ? Icons.check_circle : Icons.cancel,
-                            color: _autoSystem ? Colors.green : Colors.grey,
-                            size: 32,
-                          ),
-                        ],
-                      ),
-                    ),
                     // Thay thế ListTile hiện tại bằng đoạn code sau
                     ListTile(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       titleAlignment: ListTileTitleAlignment.center,
                       title: Column(
                         children: [
-                          Text(
-                            'Chế độ tự động theo lịch trình',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                            textAlign: TextAlign.center,
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                width: 200,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: _autoSystem
+                                      ? Colors.green.shade100
+                                      : Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child:  Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      _autoSystem ? "Đang kích hoạt " : "Đã tắt ",
+                                      style: TextStyle(
+                                        color: _autoSystem
+                                            ? Colors.green.shade700
+                                            : Colors.grey.shade700,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Icon(
+                                      _autoSystem
+                                          ? Icons.check_circle
+                                          : Icons.cancel,
+                                      color: _autoSystem
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      size: 32,
+                                    ),
+                                  ],
+                                )
+                              ),
+                              // Positioned(
+                              //   right: -10,
+                              //   child: Icon(
+                              //     _autoSystem
+                              //         ? Icons.check_circle
+                              //         : Icons.cancel,
+                              //     color:
+                              //         _autoSystem ? Colors.green : Colors.grey,
+                              //     size: 32,
+                              //   ),
+                              // ),
+                            ],
                           ),
                           SizedBox(height: 10),
                           GestureDetector(
@@ -186,31 +218,38 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                             child: AnimatedContainer(
                               alignment: Alignment.center,
                               duration: Duration(milliseconds: 300),
-                              width: 120,
-                              height: 40,
+                              width: 250,
+                              height: 50,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: _autoSystem ? Colors.green : Colors.grey.shade400,
+                                borderRadius: BorderRadius.circular(28),
+                                color: _autoSystem
+                                    ? Colors.green
+                                    : Colors.grey.shade400,
                               ),
+                              // vị trí của thanh trượt
                               child: Stack(
                                 alignment: Alignment.center,
                                 children: [
                                   AnimatedPositioned(
                                     duration: Duration(milliseconds: 300),
-                                    left: _autoSystem ? 40 : 0,
+                                    left: _autoSystem ? 200 : 0,
                                     top: 0,
                                     bottom: 0,
+                                    right: _autoSystem ? 0 : 200,
+                                    // thanh trượt
                                     child: Container(
-                                      width: 100,
-                                      height: 40,
+                                      width: 50,
+                                      height: 50,
+                                      // màu của thanh trượt
+                                      //
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
                                         color: Colors.white,
                                         boxShadow: [
                                           BoxShadow(
                                             color: Colors.black26,
-                                            blurRadius: 4,
-                                            offset: Offset(0, 2),
+                                            blurRadius: 29,
+                                            offset: Offset(0, 6),
                                           )
                                         ],
                                       ),
@@ -222,7 +261,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 12,
+                                        fontSize: 18,
                                       ),
                                     ),
                                   ),
