@@ -125,8 +125,7 @@ void autoRunSystem() {
         }
 
         // Tự động bật đèn led theo lịch trình hàng ngày
-        if (currentHour >= 9 && (currentHour <= 23 && currentMinute <= 59) ||
-            (currentHour >= 0 && currentHour < 2)) {
+        if (currentHour >= 13 && (currentHour <= 23 && currentMinute <= 30)) {
             if (!is_led) {
                 digitalWrite(LedBeLow, LOW);
                 Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
@@ -142,7 +141,7 @@ void autoRunSystem() {
             }
         }
         // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
-        //  '4:30 - 9:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 00:59',
+        //  '4:30 - 9:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 2:30',
         // Chuyển thời gian thành phút để so sánh dễ dàng
         int currentTime = currentHour * 60 + currentMinute;
 
@@ -150,7 +149,7 @@ void autoRunSystem() {
                             (currentTime >= 600 && currentTime < 780) ||    // 10:00 - 13:00
                             (currentTime >= 840 && currentTime < 1020) ||   // 14:00 - 17:00
                             (currentTime >= 1080 && currentTime < 1260) ||  // 18:00 - 21:00
-                            (currentTime >= 1320 || currentTime < 59);      // 22:00 - 00:59
+                            (currentTime >= 1320 || currentTime < 150);     // 22:00 - 2:30
         // Tự động bật bơm oxi theo lịch trình hàng ngày
         if (shouldTurnOn) {
             if (is_bom == false) {
