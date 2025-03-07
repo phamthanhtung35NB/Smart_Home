@@ -136,6 +136,7 @@ class _AquariumManagerState extends State<AquariumManager> {
 
   void _updateDatabase(String key, dynamic value) {
     _database.child('aquarium/$key').set(value);
+    _database.child('status/$key').set(value);
   }
 
   @override

@@ -47,6 +47,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       if (event.snapshot.value != null) {
         setState(() {
           _bigLight = event.snapshot.value as bool;
+          print("bigLight: ");
+          print(_bigLight);
         });
       }
     });
@@ -143,8 +145,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                   children: [
                     // Thay thế ListTile hiện tại bằng đoạn code sau
                     ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       titleAlignment: ListTileTitleAlignment.center,
                       title: Column(
                         children: [
@@ -233,11 +235,13 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                         : Colors.grey.shade200,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child:  Row(
+                                  child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        _autoSystem ? "Đang kích hoạt " : "Đã tắt ",
+                                        _autoSystem
+                                            ? "Đang kích hoạt "
+                                            : "Đã tắt ",
                                         style: TextStyle(
                                           color: _autoSystem
                                               ? Colors.green.shade700
@@ -255,8 +259,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                         size: 32,
                                       ),
                                     ],
-                                  )
-                              ),
+                                  )),
                             ],
                           ),
                         ],
@@ -329,14 +332,15 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     String timeRemaining = '';
 
     final now = DateTime.now();
+    // Chuyển đổi thời gian hiện tại thành phút
     final currentTimeInMinutes = now.hour * 60 + now.minute;
 
     if (status) {
-      // Function is currently on, calculate time until it turns off
+      //Chức năng hiện đang bật, tính thời gian cho đến khi nó tắt
       timeRemaining =
           _getTimeUntilNextEvent(schedule, currentTimeInMinutes, true);
     } else {
-      // Function is currently off, calculate time since it turned off and time until it turns on
+      //Chức năng hiện đang tắt, tính thời gian kể từ khi nó tắt và thời gian cho đến khi nó bật
       timeElapsed = _getTimeSinceLastEvent(schedule, currentTimeInMinutes);
       timeRemaining =
           _getTimeUntilNextEvent(schedule, currentTimeInMinutes, false);
@@ -444,7 +448,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
             Row(
               children: [
                 Text(
-                  "Thời gian hoạt đông trở lại:",
+                  "Thời gian thực hiện:",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade700,
@@ -473,6 +477,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
 
     final times = schedule.split(', ').map((time) {
       final parts = time.split(' - ');
+      print(status);
+      print(parts);
       return status
           ? _convertTimeToMinutes(parts[1])
           : _convertTimeToMinutes(parts[0]);
