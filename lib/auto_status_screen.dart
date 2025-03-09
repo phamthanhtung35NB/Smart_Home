@@ -256,7 +256,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                         color: _autoSystem
                                             ? Colors.green
                                             : Colors.grey,
-                                        size: 32,
+                                        size: 30,
                                       ),
                                     ],
                                   )),
@@ -308,8 +308,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               ),
               const SizedBox(height: 8),
               _buildStatusCard('Đèn bể cá', _bigLight, '13:00 - 23:30'),
+              //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
               _buildStatusCard('Bơm Oxi', _waterPump,
-                  '00:00 - 02:30, 04:30 - 09:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 00:00'),
+                  '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
               const SizedBox(height: 20),
               const Text(
                 'Lịch trình hoạt động:',
@@ -317,8 +318,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               ),
               const SizedBox(height: 10),
               _buildScheduleCard('Đèn bể cá', '13:00 - 23:30'),
+              //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
               _buildScheduleCard('Bơm Oxi',
-                  '00:00 - 02:30, 04:30 - 09:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 00:00'),
+                  '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
               const SizedBox(height: 30),
             ],
           ),
@@ -365,7 +367,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                   child: Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -376,7 +378,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                     Text(
                       "Trạng thái: ",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         color: Colors.grey.shade700,
                         fontWeight: FontWeight.w500,
                       ),
@@ -384,7 +386,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                     Text(
                       status ? 'Bật' : 'Tắt',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 15,
                         color: status ? Colors.green : Colors.red,
                         fontWeight: FontWeight.w500,
                       ),
@@ -407,15 +409,15 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                   Text(
                     "Đã tắt được: ",
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
+                      fontSize: 15,
+                      color: Colors.grey.shade900,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
                     timeElapsed,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 15,
                       color: Colors.red.shade400,
                       fontWeight: FontWeight.w500,
                     ),
@@ -429,15 +431,15 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 Text(
                   status ? "Sẽ tắt trong: " : "Sẽ bật trong: ",
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
+                    fontSize: 15,
+                    color: Colors.grey.shade900,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   status ? timeRemaining : timeRemaining,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     color: status ? Colors.red : Colors.green,
                     fontWeight: FontWeight.w500,
                   ),
@@ -448,17 +450,17 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
             Row(
               children: [
                 Text(
-                  "Thời gian thực hiện:",
+                  "Thời gian thực hiện: ",
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
+                    fontSize: 15,
+                    color: Colors.grey.shade900,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   _getNextChangeTime(schedule, status),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: status ? Colors.red.shade400 : Colors.green.shade600,
                   ),
@@ -598,7 +600,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -611,7 +613,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -621,7 +623,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
             // Text(
             //   "Lịch trình:",
             //   style: TextStyle(
-            //     fontSize: 14,
+            //     fontSize: 15,
             //     color: Colors.grey.shade700,
             //     fontWeight: FontWeight.w500,
             //   ),
@@ -631,7 +633,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               // căn giữa các chip
               alignment: WrapAlignment.center,
 
-              spacing: 6,
+              // Khoảng cách giữa các chip
+              spacing: 15,
               children: schedule.split(', ').map((time) {
                 // Phân tích cú pháp phạm vi thời gian và xác định xem nó đang hoạt động hay quá khứ
                 bool isActive = false;
@@ -666,9 +669,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 if (_autoSystem) {
                   if (isActive) {
                     backgroundColor =
-                        Colors.green.shade200; //Khoảng thời gian hoạt động
+                        Colors.green.shade100; //Khoảng thời gian hoạt động
                   } else if (isPast) {
-                    backgroundColor = Colors.yellow.shade100; // past time slot
+                    backgroundColor = Colors.yellow.shade400; // past time slot
                   }
                 }
 
@@ -678,10 +681,10 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                   label: Text(
                     time,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       color: isActive
-                          ? Colors.green.shade800
-                          : Colors.blue.shade800,
+                          ? Colors.green.shade900
+                          : Colors.blue.shade900,
                       fontWeight:
                           isActive ? FontWeight.bold : FontWeight.normal,
                     ),

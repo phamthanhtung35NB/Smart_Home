@@ -145,12 +145,11 @@ void autoRunSystem() {
             }
         }
         // Tự động bật bơm nước waterPump theo lịch trình hàng ngày
-        //  '4:30 - 9:00, 10:00 - 13:00, 14:00 - 17:00, 18:00 - 21:00, 22:00 - 2:30',
-        bool shouldTurnOn = (currentTime >= 270 && currentTime < 540) ||    // 4:30 - 9:00
-                            (currentTime >= 600 && currentTime < 780) ||    // 10:00 - 13:00
-                            (currentTime >= 840 && currentTime < 1020) ||   // 14:00 - 17:00
-                            (currentTime >= 1080 && currentTime < 1260) ||  // 18:00 - 21:00
-                            (currentTime >= 1320 || currentTime < 150);     // 22:00 - 2:30
+        //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
+        bool shouldTurnOn = (currentTime >= 240 && currentTime < 660) ||    // 4:00 - 11:00
+                            (currentTime >= 720 && currentTime < 840) ||    // 12:00 - 14:00
+                            (currentTime >= 1020 && currentTime < 1200) ||  // 17:00 - 20:00
+                            (currentTime >= 1320 || currentTime < 180);     // 22:00 - 3:00
         // Tự động bật bơm oxi theo lịch trình hàng ngày
         if (shouldTurnOn) {
             if (is_bom == false) {
