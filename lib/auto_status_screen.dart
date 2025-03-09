@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart'; // Add this import statement
 import 'dart:async';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -14,7 +15,8 @@ class AutoStatusScreen extends StatefulWidget {
 
 class _AutoStatusScreenState extends State<AutoStatusScreen> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
   bool _bigLight = false;
   bool _waterPump = false;
   bool _autoSystem = true; // Add this line
@@ -38,9 +40,34 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   void initState() {
     super.initState();
     _setupRealtimeListeners();
-    _startTimer();
+    _startTimer();_initializeNotifications();
   }
-
+  void _initializeNotifications() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+    InitializationSettings(android: initializationSettingsAndroid);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+  Future<void> _sendPushNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      channelDescription: 'your_channel_description',
+      importance: Importance.max,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound('notification_sound'),
+    );
+    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Cảnh báo nhiệt độ',
+      'Nhiệt độ vượt ngưỡng cho phép!',
+      platformChannelSpecifics,
+    );
+  }
   void _setupRealtimeListeners() {
     // Lắng nghe hệ thống tự động
     _autoSystemSubscription =
@@ -86,7 +113,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
         });
-        if (_temperature > 26 || _temperature < 23) {
+        if (_temperature >= 26) {
           _sendPushNotification();
         }
       }
@@ -112,23 +139,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         });
   }
 
-void _sendPushNotification() async {
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-  await messaging.subscribeToTopic('temperature_alerts');
-
-  // Ensure that the temperature is not null
-  if (_temperature != null) {
-    await FirebaseMessaging.instance.sendMessage(
-      to: '/topics/temperature_alerts',
-      data: {
-        'title': 'Cảnh báo nhiệt độ',
-        'body': 'Nhiệt độ hiện tại là $_temperature°C',
-      },
-    );
-  } else {
-    print('Temperature is null, not sending notification.');
-  }
-}
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {});
@@ -139,12 +149,12 @@ void _sendPushNotification() async {
     _autoSystemSubscription.cancel();
     _bigLightSubscription.cancel();
     _waterPumpSubscription.cancel();
-    _timeSubscription.cancel();
+    // _timeSubscription.cancel();
     _temperatureSubscription.cancel();
     _temperatureSubscriptionOld.cancel();
     _timeSubscriptionTemperature.cancel();
     _timer.cancel();
-    super.dispose();
+    // super.dispose();
   }
 
   // @override
