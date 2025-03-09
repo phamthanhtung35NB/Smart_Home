@@ -14,7 +14,7 @@ class _AquariumManagerState extends State<AquariumManager> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   bool _bigLight = false;
   bool _waterPump = false;
-  double _airPumpSpeed = 0.0;
+  // double _airPumpSpeed = 0.0;
   double _temperature = 0.0;
   double _temperatureOld = 0.0;
   String _currentTime = '';
@@ -74,15 +74,15 @@ class _AquariumManagerState extends State<AquariumManager> {
       }
     });
 
-    // Lắng nghe tốc độ bơm không khí
-    _airPumpSpeedSubscription =
-        _database.child('aquarium/airPumpSpeed').onValue.listen((event) {
-      if (event.snapshot.value != null) {
-        setState(() {
-          _airPumpSpeed = (event.snapshot.value as num).toDouble();
-        });
-      }
-    });
+    // // Lắng nghe tốc độ bơm không khí
+    // _airPumpSpeedSubscription =
+    //     _database.child('aquarium/airPumpSpeed').onValue.listen((event) {
+    //   if (event.snapshot.value != null) {
+    //     setState(() {
+    //       _airPumpSpeed = (event.snapshot.value as num).toDouble();
+    //     });
+    //   }
+    // });
 
     // Lắng nghe thời gian
     _timeSubscription =
@@ -106,7 +106,7 @@ class _AquariumManagerState extends State<AquariumManager> {
     _temperatureSubscription.cancel();
     _bigLightSubscription.cancel();
     _waterPumpSubscription.cancel();
-    _airPumpSpeedSubscription.cancel();
+    // _airPumpSpeedSubscription.cancel();
     _timeSubscription.cancel();
     _temperatureSubscriptionOld.cancel();
     _timer.cancel();
@@ -158,7 +158,7 @@ class _AquariumManagerState extends State<AquariumManager> {
               'Nhiệt độ bể cá',
               Icon(Icons.thermostat, color: Theme.of(context).primaryColor),
               (() {
-                if (_temperature >= 27) {
+                if (_temperature >= 26) {
                   return Text(
                     '${_temperature.toStringAsFixed(3)} °C',
                     style: const TextStyle(
@@ -167,7 +167,7 @@ class _AquariumManagerState extends State<AquariumManager> {
                       color: Colors.redAccent,
                     ),
                   );
-                } else if (_temperature < 27 && _temperature > 23) {
+                } else if (_temperature < 26 && _temperature > 23) {
                   return Text(
                     '${_temperature.toStringAsFixed(3)} °C',
                     style: const TextStyle(

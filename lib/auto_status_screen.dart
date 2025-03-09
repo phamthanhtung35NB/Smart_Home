@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart'; // Add this import statement
 import 'dart:async';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -19,6 +20,15 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   bool _autoSystem = true; // Add this line
   String _currentTime = '';
 
+  double _temperature = 0.0;
+  double _temperatureOld = 0.0;
+  String _currentTimeTemperature = '';
+
+  late Timer _timer;
+  late StreamSubscription<DatabaseEvent> _temperatureSubscription;
+  late StreamSubscription<DatabaseEvent> _temperatureSubscriptionOld;
+  late StreamSubscription<DatabaseEvent> _timeSubscriptionTemperature;
+
   late StreamSubscription<DatabaseEvent> _autoSystemSubscription;
   late StreamSubscription<DatabaseEvent> _bigLightSubscription;
   late StreamSubscription<DatabaseEvent> _waterPumpSubscription;
@@ -28,6 +38,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   void initState() {
     super.initState();
     _setupRealtimeListeners();
+    _startTimer();
   }
 
   void _setupRealtimeListeners() {
@@ -47,8 +58,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       if (event.snapshot.value != null) {
         setState(() {
           _bigLight = event.snapshot.value as bool;
-          print("bigLight: ");
-          print(_bigLight);
         });
       }
     });
@@ -71,14 +80,70 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         });
       }
     });
+    // Lắng nghe nhiệt độ
+    _temperatureSubscription = _database.child('aquarium/temperature').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _temperature = (event.snapshot.value as num).toDouble();
+        });
+        if (_temperature > 26 || _temperature < 23) {
+          _sendPushNotification();
+        }
+      }
+    });
+
+    // Lắng nghe nhiệt độ cũ
+    _temperatureSubscriptionOld =
+        _database.child('aquarium/temperatureOld').onValue.listen((event) {
+          if (event.snapshot.value != null) {
+            setState(() {
+              _temperatureOld = (event.snapshot.value as num).toDouble();
+            });
+          }
+        });
+    // Lắng nghe thời gian
+    _timeSubscriptionTemperature =
+        _database.child('aquarium/time').onValue.listen((event) {
+          if (event.snapshot.value != null) {
+            setState(() {
+              _currentTimeTemperature = event.snapshot.value as String;
+            });
+          }
+        });
   }
 
+void _sendPushNotification() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  await messaging.subscribeToTopic('temperature_alerts');
+
+  // Ensure that the temperature is not null
+  if (_temperature != null) {
+    await FirebaseMessaging.instance.sendMessage(
+      to: '/topics/temperature_alerts',
+      data: {
+        'title': 'Cảnh báo nhiệt độ',
+        'body': 'Nhiệt độ hiện tại là $_temperature°C',
+      },
+    );
+  } else {
+    print('Temperature is null, not sending notification.');
+  }
+}
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {});
+    });
+  }
   @override
   void dispose() {
     _autoSystemSubscription.cancel();
     _bigLightSubscription.cancel();
     _waterPumpSubscription.cancel();
     _timeSubscription.cancel();
+    _temperatureSubscription.cancel();
+    _temperatureSubscriptionOld.cancel();
+    _timeSubscriptionTemperature.cancel();
+    _timer.cancel();
     super.dispose();
   }
 
@@ -299,6 +364,40 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ),
               const SizedBox(height: 15),
+              temperatureCardConstruction(
+                'Nhiệt độ bể cá',
+                Icon(Icons.thermostat, color: Theme.of(context).primaryColor),
+                (() {
+                  if (_temperature >= 26) {
+                    return Text(
+                      '${_temperature.toStringAsFixed(3)} °C',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent,
+                      ),
+                    );
+                  } else if (_temperature < 26 && _temperature > 23) {
+                    return Text(
+                      '${_temperature.toStringAsFixed(3)} °C',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent,
+                      ),
+                    );
+                  } else {
+                    return Text(
+                      '${_temperature.toStringAsFixed(3)} °C',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent,
+                      ),
+                    );
+                  }
+                })(),
+              ),
               const Padding(
                 padding: EdgeInsets.only(left: 10, right: 10),
                 child: Text(
@@ -479,8 +578,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
 
     final times = schedule.split(', ').map((time) {
       final parts = time.split(' - ');
-      print(status);
-      print(parts);
       return status
           ? _convertTimeToMinutes(parts[1])
           : _convertTimeToMinutes(parts[0]);
@@ -711,5 +808,138 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       return hours * 60 + minutes;
     }
     return 0;
+  }
+
+  Widget temperatureCardConstruction(
+      String title, Widget leading, Widget trailing) {
+    return Card(
+      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    leading,
+                    const SizedBox(width: 10),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                trailing,
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Divider(
+              color: Colors.grey,
+              thickness: 1,
+              indent: 5,
+              endIndent: 5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Flexible(
+                  child: Text(
+                    'Cập nhật nhiệt độ gần nhất: ',
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Text(
+                  _getTimeElapsed(_currentTimeTemperature),
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
+
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Text(
+                'Lúc: ',
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                _currentTimeTemperature,
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent),
+                textAlign: TextAlign.center,
+              ),
+            ]),
+            const Divider(
+              color: Colors.grey,
+              thickness: 1, //đây là thông số độ dày
+              indent: 5, //đây là thông số khoảng cách bên trái
+              endIndent: 5, //đây là thông số khoảng cách bên phải
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Flexible(
+                  child: Text(
+                    'Nhiệt độ trước đó: ',
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Text(
+                  '${_temperatureOld.toStringAsFixed(3)} °C',
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueAccent),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  String _getTimeElapsed(String lastUpdateTime) {
+    try {
+      DateTime now = DateTime.now();
+      DateTime lastUpdate = DateFormat('HH:mm:ss').parse(lastUpdateTime);
+      // Adjust the lastUpdate to today's date
+      lastUpdate = DateTime(
+          now.year, now.month, now.day, lastUpdate.hour, lastUpdate.minute);
+      Duration difference = now.difference(lastUpdate);
+      if (difference.inHours > 0) {
+        return '${difference.inHours} giờ ${difference.inMinutes % 60} phút';
+      } else {
+        int seconds = difference.inSeconds % 60;
+        //bỏ qua số sau dấu phẩy
+        return '${difference.inMinutes} phút $seconds giây';
+      }
+    } catch (e) {
+      // Handle the exception by returning a default value or logging the error
+      return 'Invalid time format';
+    }
   }
 }
