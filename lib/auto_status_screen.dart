@@ -113,7 +113,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
         });
-        if (_temperature >= 26) {
+        if (_temperature >= 26||_temperature<=23) {
           _sendPushNotification();
         }
       }

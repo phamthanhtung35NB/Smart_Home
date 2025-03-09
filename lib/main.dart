@@ -55,7 +55,7 @@ void onStart(ServiceInstance service) async {
   _database.child('aquarium/temperature').onValue.listen((event) {
     if (event.snapshot.value != null) {
       double temperature = (event.snapshot.value as num).toDouble();
-      if (temperature >= 26) {
+      if (temperature >= 26||temperature<=23) {
         _sendPushNotification('Nhiệt độ hiện tại: $temperature°C, vượt ngưỡng!');
       }
     }
