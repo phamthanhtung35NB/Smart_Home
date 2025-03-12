@@ -178,6 +178,9 @@ void autoRunSystem() {
         }
         // Cập nhật thời gian lên Firebase mỗi 20 phút
         if (currentMinute == 0 || currentMinute == 20 || currentMinute == 40) {
+            if (currentEffect == 0) {
+                tatDen();
+            }
             timeClient.forceUpdate();
             currentHour = timeClient.getHours();
             currentMinute = timeClient.getMinutes();
