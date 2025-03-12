@@ -59,12 +59,22 @@ void loop() {
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi disconnected. Reconnecting...");
         if (wifiState == true) {
-            blinkLED(LedBeLow, 4, 500);  // Nhấp nháy 3 lần khi mất kết nối
+            blinkLED(LedBeLow, 2, 500);  // Nhấp nháy 3 lần khi mất kết nối
             wifiState = false;
+            if (is_led == true) {
+                digitalWrite(LedBeLow, LOW);
+            } else if (is_led == false) {
+                digitalWrite(LedBeLow, HIGH);
+            }
         }
         initWifi();
         if (WiFi.status() == WL_CONNECTED) {
-            blinkLED(LedBeLow, 2, 400);  // Nhấp nháy 2 lần khi kết nối lại
+            blinkLED(LedBeLow, 2, 100);  // Nhấp nháy 2 lần khi kết nối lại
+            if (is_led == true) {
+                digitalWrite(LedBeLow, LOW);
+            } else if (is_led == false) {
+                digitalWrite(LedBeLow, HIGH);
+            }
         }
     }
     // Kiểm tra kết nối Firebase
