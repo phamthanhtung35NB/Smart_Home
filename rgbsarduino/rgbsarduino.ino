@@ -23,6 +23,7 @@ void setup() {
     digitalWrite(LedBeLow, HIGH);
     pinMode(ena, OUTPUT);
     pinMode(bomKKLow, OUTPUT);
+    digitalWrite(bomKKLow, HIGH);
 //    pinMode(lamp, OUTPUT);
 //    digitalWrite(lamp, HIGH);
 //    pinMode(levelLampHigh, OUTPUT);
