@@ -83,7 +83,7 @@ void loop() {
         checkFirebaseStream(&fbdo_status);
         checkFirebaseStream(&fbdo_led);
 //        checkFirebaseStream(&fbdo_lamp);
-        checkFirebaseStream(&fbdo_aquarium);
+        // checkFirebaseStream(&fbdo_aquarium);
     }
     delay(100);
     // autoSyncTime();
@@ -144,14 +144,14 @@ void autoRunSystem() {
             if (!is_led) {
                 digitalWrite(LedBeLow, LOW);
                 Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
-                Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
+                // Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
                 is_led = true;
             }
         } else {
             if (is_led) {
                 digitalWrite(LedBeLow, HIGH);
                 Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
-                Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
+                // Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
                 is_led = false;
             }
         }
@@ -166,14 +166,14 @@ void autoRunSystem() {
             if (is_bom == false) {
                 digitalWrite(bomKKLow, LOW);
                 Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
-                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
+                // Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
                 is_bom = true;
             }
         } else {
             if (is_bom == true) {
                 digitalWrite(bomKKLow, HIGH);
                 Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
-                Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
+                // Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
                 is_bom = false;
             }
         }
@@ -225,10 +225,10 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         is_led = fbdo->boolData();
         if (autoSystem == true) {
             if (is_led == true) {
-                Firebase.RTDB.setBool(fbdo, "/aquarium/bigLight", true);
+                // Firebase.RTDB.setBool(fbdo, "/aquarium/bigLight", true);
                 Firebase.RTDB.setBool(fbdo, "/status/bigLight", true);
             } else {
-                Firebase.RTDB.setBool(fbdo, "/aquarium/bigLight", false);
+                // Firebase.RTDB.setBool(fbdo, "/aquarium/bigLight", false);
                 Firebase.RTDB.setBool(fbdo, "/status/bigLight", false);
             }
         } else if (autoSystem == false) {
@@ -266,10 +266,10 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         if (autoSystem == true) {
             if (is_bom == true) {
                 //sửa lại giá trị trên firebase vì đang bật chế độ tự động
-                Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", true);
+                // Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", true);
                 Firebase.RTDB.setBool(fbdo, "/status/waterPump", true);
             } else {
-                Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", false);
+                // Firebase.RTDB.setBool(fbdo, "/aquarium/waterPump", false);
                 Firebase.RTDB.setBool(fbdo, "/status/waterPump", false);
             }
         } else if (autoSystem == false) {

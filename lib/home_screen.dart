@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          AutoStatusScreen(),
+          AquariumManager(),
           AutoStatusScreen(), // ✅ Trang Home đầu tiên
           LedController(),
         ],

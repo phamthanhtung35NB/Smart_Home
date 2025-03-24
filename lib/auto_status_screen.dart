@@ -313,6 +313,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
+
                                       Text(
                                         _autoSystem
                                             ? "Đang kích hoạt "
@@ -416,9 +417,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              _buildStatusCard('Đèn bể cá', _bigLight, '13:00 - 23:30'),
+              _buildStatusCard('Đèn bể cá','bigLight', _bigLight, '13:00 - 23:30'),
               //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
-              _buildStatusCard('Bơm Oxi', _waterPump,
+              _buildStatusCard('Bơm Oxi', 'waterPump', _waterPump,
                   '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
               const SizedBox(height: 20),
               const Text(
@@ -437,8 +438,11 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       ),
     );
   }
-
-  Widget _buildStatusCard(String title, bool status, String schedule) {
+  void _updateDatabase(String key, dynamic value) {
+    // _database.child('aquarium/$key').set(value);
+    _database.child('status/$key').set(value);
+  }
+  Widget _buildStatusCard(String title,String thietBi, bool status, String schedule) {
     String timeElapsed = '';
     String timeRemaining = '';
 
@@ -484,6 +488,28 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    if (thietBi == 'bigLight') ...[
+                      Switch(
+                        value: _bigLight,
+                        onChanged: (value) {
+                          setState(() {
+                            _bigLight = value;
+                            _updateDatabase(thietBi, value);
+                          });
+                        },
+                      ),
+                    ] else ...[
+                      Switch(
+                        value: _waterPump,
+                        onChanged: (value) {
+                          setState(() {
+                            _waterPump = value;
+                            _updateDatabase(thietBi, value);
+                          });
+                        },
+                      ),
+                    ],
+
                     Text(
                       "Trạng thái: ",
                       style: TextStyle(
