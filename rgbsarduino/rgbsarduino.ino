@@ -131,7 +131,7 @@ void autoRunSystem() {
             //cập nhật cả giây
             String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
                                  String(currentMinute) + ":" + String(currentSecond);
-            Firebase.RTDB.setString(&fbdo, "/status/time", currentTime);
+            Firebase.RTDB.setString(&fbdo, "/aquarium/time", currentTime);
             initTimeUpFirebase = true;
         }
         // Chuyển thời gian thành phút để so sánh dễ dàng

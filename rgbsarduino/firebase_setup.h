@@ -29,8 +29,6 @@ void initFirebase() {
 
     success &= Firebase.RTDB.beginStream(&fbdo_status, "/status");
     success &= Firebase.RTDB.beginStream(&fbdo_led, "/led");
-//    success &= Firebase.RTDB.beginStream(&fbdo_lamp, "/lamp");
-    success &= Firebase.RTDB.beginStream(&fbdo_aquarium, "/aquarium");
 
     if (!success) {
         Serial.printf("Stream setup failed: %s\n", fbdo_status.errorReason().c_str());
@@ -47,25 +45,13 @@ void _syncDataFromFirebase(FirebaseData *fbdo) {
     if (Firebase.RTDB.getBool(fbdo, "/status/auto")) {
         autoSystem = fbdo->boolData();
     }
-//    if (Firebase.RTDB.getBool(fbdo, "/lamp/status")) {
-//        lampState = fbdo->boolData();
-//        updateLamp();
-//    }
-//    if (Firebase.RTDB.getBool(fbdo, "/lamp/level")) {
-//        levelLampHighState = fbdo->boolData();
-//        updateLamp();
-//    }
-    if (Firebase.RTDB.getBool(fbdo, "/aquarium/waterPump")) {
-        is_bom = fbdo->boolData();
-        digitalWrite(bomKKLow, is_bom ? LOW : HIGH);
-    }
-    if (Firebase.RTDB.getBool(fbdo, "/aquarium/bigLight")) {
+    if (Firebase.RTDB.getBool(fbdo, "/status/bigLight")) {
         is_led = fbdo->boolData();
         digitalWrite(LedBeLow, is_led ? LOW : HIGH);
     }
-    if (Firebase.RTDB.getInt(fbdo, "/aquarium/airPumpSpeed")) {
-        airPumpSpeed = fbdo->intData();
-        analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
+    if (Firebase.RTDB.getBool(fbdo, "/status/waterPump")) {
+        is_bom = fbdo->boolData();
+        digitalWrite(bomKKLow, is_bom ? LOW : HIGH);
     }
     if (Firebase.RTDB.getInt(fbdo, "/led/currentEffect")) {
         currentEffect = fbdo->intData();
