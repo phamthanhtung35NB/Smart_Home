@@ -100,7 +100,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     });
 
     // Lắng nghe thời gian
-    _timeSubscription = _database.child('status/time').onValue.listen((event) {
+    _timeSubscription = _database.child('aquarium/readtime').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _currentTime = event.snapshot.value as String;
@@ -488,27 +488,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    if (thietBi == 'bigLight') ...[
-                      Switch(
-                        value: _bigLight,
-                        onChanged: (value) {
-                          setState(() {
-                            _bigLight = value;
-                            _updateDatabase(thietBi, value);
-                          });
-                        },
-                      ),
-                    ] else ...[
-                      Switch(
-                        value: _waterPump,
-                        onChanged: (value) {
-                          setState(() {
-                            _waterPump = value;
-                            _updateDatabase(thietBi, value);
-                          });
-                        },
-                      ),
-                    ],
+
 
                     Text(
                       "Trạng thái: ",
@@ -532,6 +512,31 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                       color: status ? Colors.green : Colors.grey,
                       size: 22,
                     ),
+                    if (thietBi == 'bigLight') ...[
+                      Switch(
+                        value: _bigLight,
+                        onChanged: _autoSystem ? null : (value) {
+                          setState(() {
+                            _bigLight = value;
+                            _updateDatabase(thietBi, value);
+                          });
+                        },
+                        activeColor: _autoSystem ? Colors.grey : Colors.yellow,
+                        inactiveThumbColor: Colors.grey,
+                      ),
+                    ] else ...[
+                      Switch(
+                        value: _waterPump,
+                        onChanged: _autoSystem ? null : (value) {
+                          setState(() {
+                            _waterPump = value;
+                            _updateDatabase(thietBi, value);
+                          });
+                        },
+                        activeColor: _autoSystem ? Colors.grey : Colors.blue,
+                        inactiveThumbColor: Colors.grey,
+                      ),
+                    ],
                   ],
                 ),
               ],
