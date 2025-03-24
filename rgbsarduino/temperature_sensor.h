@@ -3,7 +3,6 @@
 
 #include <DallasTemperature.h>
 #include "config.h"
-#include "config.h"
 
 void updateTemperature(FirebaseData *fbdo, float temperature) {
     if (temperature != -127.00) {
