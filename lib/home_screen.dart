@@ -12,7 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 1; // ✅ Mặc định là Trang chủ
+  int _selectedIndex = 0; // ✅ Mặc định là Trang chủ
   String _title = 'Smart Home';
   PageController _pageController = PageController(initialPage: 1); // ✅ Bắt đầu từ trang home
 
@@ -21,12 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
       switch (index) {
         case 0:
-          _title = 'Điều khiển bể cá';
-          break;
-        case 1:
           _title = 'Tự động';
           break;
-        case 2:
+        case 1:
           _title = 'Điều khiển Led RGB';
           break;
       }
@@ -39,12 +36,9 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
       switch (index) {
         case 0:
-          _title = 'Điều khiển bể cá';
-          break;
-        case 1:
           _title = 'Tự động';
           break;
-        case 2:
+        case 1:
           _title = 'Điều khiển Led RGB';
           break;
       }
@@ -68,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          AquariumManager(),
           AutoStatusScreen(), // ✅ Trang Home đầu tiên
           LedController(),
         ],

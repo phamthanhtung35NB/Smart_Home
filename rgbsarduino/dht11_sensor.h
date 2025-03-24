@@ -5,6 +5,9 @@
 void updateDHTSensor(float h, float t, float f, float hic, float hif) {
     if (abs(h - h0) >= 1.0) {
         //ép kiểu phải update dữ liệu lên firebase là float
+        if (h==0||h==0.00){
+          Firebase.RTDB.setFloat(&fbdo, "/dht/humidity", 0.0);
+        }
         Firebase.RTDB.setFloat(&fbdo, "/dht/humidity", h*1.01);
         h0 = h;
     }

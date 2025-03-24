@@ -4,7 +4,6 @@ import 'package:intl/intl.dart'; // Add this import statement
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -16,7 +15,7 @@ class AutoStatusScreen extends StatefulWidget {
 class _AutoStatusScreenState extends State<AutoStatusScreen> {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
   bool _bigLight = false;
   bool _waterPump = false;
   bool _autoSystem = true; // Add this line
@@ -25,6 +24,14 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   double _temperature = 0.0;
   double _temperatureOld = 0.0;
   String _currentTimeTemperature = '';
+
+  // DHT11 sensor data
+  double _humidity = 0.0;
+  double _dhtTemperatureC = 0.0;
+  double _dhtTemperatureF = 0.0;
+  double _heatIndexC = 0.0;
+  double _heatIndexF = 0.0;
+  late StreamSubscription<DatabaseEvent> _dhtSubscription;
 
   late Timer _timer;
   late StreamSubscription<DatabaseEvent> _temperatureSubscription;
@@ -40,18 +47,21 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   void initState() {
     super.initState();
     _setupRealtimeListeners();
-    _startTimer();_initializeNotifications();
+    _startTimer();
+    _initializeNotifications();
   }
+
   void _initializeNotifications() {
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
-    InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(android: initializationSettingsAndroid);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
+
   Future<void> _sendPushNotification() async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    AndroidNotificationDetails(
+        AndroidNotificationDetails(
       'your_channel_id',
       'your_channel_name',
       channelDescription: 'your_channel_description',
@@ -60,7 +70,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       sound: RawResourceAndroidNotificationSound('notification_sound'),
     );
     const NotificationDetails platformChannelSpecifics =
-    NotificationDetails(android: androidPlatformChannelSpecifics);
+        NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
       0,
       'Cảnh báo nhiệt độ',
@@ -68,6 +78,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       platformChannelSpecifics,
     );
   }
+
   void _setupRealtimeListeners() {
     // Lắng nghe hệ thống tự động
     _autoSystemSubscription =
@@ -100,7 +111,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     });
 
     // Lắng nghe thời gian
-    _timeSubscription = _database.child('aquarium/readtime').onValue.listen((event) {
+    _timeSubscription =
+        _database.child('aquarium/readtime').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _currentTime = event.snapshot.value as String;
@@ -108,12 +120,13 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       }
     });
     // Lắng nghe nhiệt độ
-    _temperatureSubscription = _database.child('aquarium/temperature').onValue.listen((event) {
+    _temperatureSubscription =
+        _database.child('aquarium/temperature').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
         });
-        if (_temperature >= 26||_temperature<=23) {
+        if (_temperature >= 26 || _temperature <= 23) {
           _sendPushNotification();
         }
       }
@@ -122,21 +135,36 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     // Lắng nghe nhiệt độ cũ
     _temperatureSubscriptionOld =
         _database.child('aquarium/temperatureOld').onValue.listen((event) {
-          if (event.snapshot.value != null) {
-            setState(() {
-              _temperatureOld = (event.snapshot.value as num).toDouble();
-            });
-          }
+      if (event.snapshot.value != null) {
+        setState(() {
+          _temperatureOld = (event.snapshot.value as num).toDouble();
         });
+      }
+    });
     // Lắng nghe thời gian
     _timeSubscriptionTemperature =
         _database.child('aquarium/time').onValue.listen((event) {
-          if (event.snapshot.value != null) {
-            setState(() {
-              _currentTimeTemperature = event.snapshot.value as String;
-            });
-          }
+      if (event.snapshot.value != null) {
+        setState(() {
+          _currentTimeTemperature = event.snapshot.value as String;
         });
+      }
+    });
+    // Lắng nghe cảm biến DHT11
+    _dhtSubscription = _database.child('dht').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic> dhtData = event.snapshot.value as Map;
+        setState(() {
+          _humidity = (dhtData['humidity'] as num?)?.toDouble() ?? 0.0;
+          _dhtTemperatureC =
+              (dhtData['temperatureC'] as num?)?.toDouble() ?? 0.0;
+          _dhtTemperatureF =
+              (dhtData['temperatureF'] as num?)?.toDouble() ?? 0.0;
+          _heatIndexC = (dhtData['heatIndexC'] as num?)?.toDouble() ?? 0.0;
+          _heatIndexF = (dhtData['heatIndexF'] as num?)?.toDouble() ?? 0.0;
+        });
+      }
+    });
   }
 
   void _startTimer() {
@@ -144,17 +172,18 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       setState(() {});
     });
   }
+
   @override
   void dispose() {
     _autoSystemSubscription.cancel();
     _bigLightSubscription.cancel();
     _waterPumpSubscription.cancel();
-    // _timeSubscription.cancel();
     _temperatureSubscription.cancel();
     _temperatureSubscriptionOld.cancel();
     _timeSubscriptionTemperature.cancel();
+    _dhtSubscription.cancel(); // Add this line
     _timer.cancel();
-    // super.dispose();
+    super.dispose();
   }
 
   // @override
@@ -313,7 +342,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-
                                       Text(
                                         _autoSystem
                                             ? "Đang kích hoạt "
@@ -375,6 +403,123 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ),
               const SizedBox(height: 15),
+// DHT11 Humidity Card
+              Card(
+                color: Colors.white,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.water_drop, color: Colors.blue),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Độ ẩm không khí',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${_humidity.toStringAsFixed(0)}%',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _humidity < 40
+                                  ? Colors.orange
+                                  : _humidity > 70
+                                      ? Colors.blue
+                                      : Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        indent: 5,
+                        endIndent: 5,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.thermostat_outlined,
+                                  color: Colors.red),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Nhiệt độ không khí',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${_dhtTemperatureC.toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _dhtTemperatureC < 22
+                                  ? Colors.blue
+                                  : _dhtTemperatureC > 30
+                                      ? Colors.red
+                                      : Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                        indent: 5,
+                        endIndent: 5,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.local_fire_department,
+                                  color: Colors.orange),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Nhiệt độ cảm nhận',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${_heatIndexC.toStringAsFixed(1)}°C',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _heatIndexC < 22
+                                  ? Colors.blue
+                                  : _heatIndexC > 30
+                                      ? Colors.deepOrange
+                                      : Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
               temperatureCardConstruction(
                 'Nhiệt độ bể cá',
                 Icon(Icons.thermostat, color: Theme.of(context).primaryColor),
@@ -417,7 +562,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              _buildStatusCard('Đèn bể cá','bigLight', _bigLight, '13:00 - 23:30'),
+              _buildStatusCard(
+                  'Đèn bể cá', 'bigLight', _bigLight, '13:00 - 23:30'),
               //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
               _buildStatusCard('Bơm Oxi', 'waterPump', _waterPump,
                   '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
@@ -438,11 +584,14 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       ),
     );
   }
+
   void _updateDatabase(String key, dynamic value) {
     // _database.child('aquarium/$key').set(value);
     _database.child('status/$key').set(value);
   }
-  Widget _buildStatusCard(String title,String thietBi, bool status, String schedule) {
+
+  Widget _buildStatusCard(
+      String title, String thietBi, bool status, String schedule) {
     String timeElapsed = '';
     String timeRemaining = '';
 
@@ -488,8 +637,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-
-
                     Text(
                       "Trạng thái: ",
                       style: TextStyle(
@@ -515,24 +662,28 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                     if (thietBi == 'bigLight') ...[
                       Switch(
                         value: _bigLight,
-                        onChanged: _autoSystem ? null : (value) {
-                          setState(() {
-                            _bigLight = value;
-                            _updateDatabase(thietBi, value);
-                          });
-                        },
+                        onChanged: _autoSystem
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _bigLight = value;
+                                  _updateDatabase(thietBi, value);
+                                });
+                              },
                         activeColor: _autoSystem ? Colors.grey : Colors.yellow,
                         inactiveThumbColor: Colors.grey,
                       ),
                     ] else ...[
                       Switch(
                         value: _waterPump,
-                        onChanged: _autoSystem ? null : (value) {
-                          setState(() {
-                            _waterPump = value;
-                            _updateDatabase(thietBi, value);
-                          });
-                        },
+                        onChanged: _autoSystem
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _waterPump = value;
+                                  _updateDatabase(thietBi, value);
+                                });
+                              },
                         activeColor: _autoSystem ? Colors.grey : Colors.blue,
                         inactiveThumbColor: Colors.grey,
                       ),
@@ -893,7 +1044,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               children: [
                 const Flexible(
                   child: Text(
-                    'Cập nhật nhiệt độ gần nhất: ',
+                    'Cập nhật gần nhất: ',
                     style: TextStyle(
                       fontSize: 15,
                     ),
@@ -911,7 +1062,6 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 ),
               ],
             ),
-
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               const Text(
                 'Lúc: ',
@@ -963,6 +1113,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       ),
     );
   }
+
   String _getTimeElapsed(String lastUpdateTime) {
     try {
       DateTime now = DateTime.now();

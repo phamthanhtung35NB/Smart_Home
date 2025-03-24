@@ -18,7 +18,6 @@ class BottomAppBarWidget extends StatelessWidget {
       style: TabStyle.reactCircle,
       // activeColor: Colors.blue,
       items: [
-        TabItem(icon: Icons.pets, title: ''),
         TabItem(icon: Icons.home, title: ''), // ✅ Trang Home đầu tiên
         TabItem(icon: Icons.auto_awesome, title: ''),
       ],
