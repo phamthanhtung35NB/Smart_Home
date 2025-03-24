@@ -15,7 +15,7 @@ class BottomAppBarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ConvexAppBar(
       key: ValueKey(selectedIndex),
-      style: TabStyle.reactCircle,
+      style: TabStyle.react,
       // activeColor: Colors.blue,
       items: [
         TabItem(icon: Icons.home, title: ''), // ✅ Trang Home đầu tiên

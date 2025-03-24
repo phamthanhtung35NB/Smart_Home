@@ -3,7 +3,7 @@ import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/widgets/custom_drawer.dart';
 import 'package:rgbs/widgets/bottom_app_bar.dart';
 import 'package:rgbs/led_controller.dart';
-import 'package:rgbs/aquarium_manager.dart';
+// import 'package:rgbs/aquarium_manager.dart';
 import 'package:rgbs/auto_status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // ✅ Mặc định là Trang chủ
   String _title = 'Smart Home';
-  PageController _pageController = PageController(initialPage: 1); // ✅ Bắt đầu từ trang home
+  PageController _pageController = PageController(initialPage: 0); // ✅ Bắt đầu từ trang home
 
   void _onTabSelected(int index) {
     setState(() {
