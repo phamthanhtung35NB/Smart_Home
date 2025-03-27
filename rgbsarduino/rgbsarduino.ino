@@ -22,9 +22,16 @@ void setup() {
 
     pinMode(LedBeLow, OUTPUT);
     digitalWrite(LedBeLow, HIGH);
+
     pinMode(ena, OUTPUT);
+
     pinMode(bomKKLow, OUTPUT);
     digitalWrite(bomKKLow, HIGH);
+
+    pinMode(FAN_PIN, OUTPUT);
+    digitalWrite(FAN_PIN, HIGH);
+    pinMode(HEATER_PIN, OUTPUT);
+    digitalWrite(HEATER_PIN, HIGH);
     //    pinMode(lamp, OUTPUT);
     //    digitalWrite(lamp, HIGH);
     //    pinMode(levelLampHigh, OUTPUT);

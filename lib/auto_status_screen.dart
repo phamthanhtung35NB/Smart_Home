@@ -19,6 +19,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   bool _bigLight = false;
   bool _waterPump = false;
   bool _autoSystem = true; // Add this line
+  bool _fan = false;
+  bool _heater = false;
+
   String _currentTime = '';
 
   double _temperature = 0.0;
@@ -42,7 +45,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   late StreamSubscription<DatabaseEvent> _bigLightSubscription;
   late StreamSubscription<DatabaseEvent> _waterPumpSubscription;
   late StreamSubscription<DatabaseEvent> _timeSubscription;
-
+  late StreamSubscription<DatabaseEvent> _fanSubscription;
+  late StreamSubscription<DatabaseEvent> _heaterSubscription;
   @override
   void initState() {
     super.initState();
@@ -165,6 +169,21 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         });
       }
     });
+    _fanSubscription = _database.child('status/fan').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _fan = event.snapshot.value as bool;
+        });
+      }
+    });
+
+    _heaterSubscription = _database.child('status/heater').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _heater = event.snapshot.value as bool;
+        });
+      }
+    });
   }
 
   void _startTimer() {
@@ -181,6 +200,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     _temperatureSubscription.cancel();
     _temperatureSubscriptionOld.cancel();
     _timeSubscriptionTemperature.cancel();
+    _fanSubscription.cancel();
+    _heaterSubscription.cancel();
     _dhtSubscription.cancel(); // Add this line
     _timer.cancel();
     super.dispose();
@@ -568,6 +589,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               _buildStatusCard('Bơm Oxi', 'waterPump', _waterPump,
                   '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
               const SizedBox(height: 20),
+              _buildStatusCard('Quạt', 'fan', _fan, ''),
+              _buildStatusCard('Sưởi', 'heater', _heater, ''),
               const Text(
                 'Lịch trình hoạt động:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

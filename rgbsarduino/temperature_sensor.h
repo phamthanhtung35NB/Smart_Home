@@ -6,28 +6,60 @@
 
 void updateTemperature(FirebaseData *fbdo, float temperature) {
     if (temperature != -127.00) {
+        if (temperature >= 30.0) {
+            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Quá nóng! Kiểm tra hệ thống làm mát!");
+        } else if (temperature <= 20.0) {
+            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Quá lạnh! Kiểm tra hệ thống sưởi!");
+        } else {
+            Firebase.RTDB.setString(fbdo, "/status/warning", "Nhiệt độ ổn định");
+        }
+
         Firebase.RTDB.setFloat(fbdo, "/aquarium/temperature", temperature);
         Firebase.RTDB.setFloat(fbdo, "/aquarium/temperatureOld", lastTemperature);
         lastTemperature = temperature;
+
         timeClient.forceUpdate();
-        unsigned long epochTime = timeClient.getEpochTime();
-        struct tm *ptm = gmtime((time_t * ) & epochTime);
-        int currentHour = timeClient.getHours();
-        int currentMinute = timeClient.getMinutes();
-        int currentSecond = timeClient.getSeconds();
-        String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
-                             String(currentMinute) + ":" + String(currentSecond);
+        String currentTime = String(timeClient.getHours()) + ":" +
+                             (timeClient.getMinutes() < 10 ? "0" : "") + String(timeClient.getMinutes()) + ":" +
+                             String(timeClient.getSeconds());
         Firebase.RTDB.setString(fbdo, "/aquarium/time", currentTime);
-        // Firebase.RTDB.setInt(fbdo, "/aquarium/epochTime", epochTime);
+
+        // Control fan and heater with hysteresis
+        if (autoSystem) {
+            // Điều khiển quạt
+            if (temperature >= 26.5 && !is_fan) {  // Chỉ bật nếu chưa bật
+                digitalWrite(FAN_PIN, LOW);
+                is_fan = true;
+                Firebase.RTDB.setBool(fbdo, "/status/fan", true);
+            } else if (temperature <= 25.5 && is_fan) {  // Chỉ tắt nếu đang bật
+                digitalWrite(FAN_PIN, HIGH);
+                is_fan = false;
+                Firebase.RTDB.setBool(fbdo, "/status/fan", false);
+            }
+
+            // Điều khiển sưởi
+            if (temperature <= 22 && !is_heater) {
+                digitalWrite(HEATER_PIN, LOW);
+                is_heater = true;
+                Firebase.RTDB.setBool(fbdo, "/status/heater", true);
+            } else if (temperature >= 24 && is_heater) {
+                digitalWrite(HEATER_PIN, HIGH);
+                is_heater = false;
+                Firebase.RTDB.setBool(fbdo, "/status/heater", false);
+            }
+        }
     }
 }
+
 
 void getTemperatures() {
     sensors.requestTemperatures();
     float temperatureC = sensors.getTempCByIndex(0);
     if (temperatureC == -127.00) {
-        sensors.begin();
+              Firebase.RTDB.setFloat(fbdo, "/aquarium/temperature", -99999);
         Serial.println("⚠️ Error: DS18B20 sensor not found!");
+        return;  // Thoát khỏi hàm nếu cảm biến lỗi
+    
     } else {
         if (abs(temperatureC - lastTemperature) > 0.1) {
             Serial.print("🌡️ Temperature: ");
