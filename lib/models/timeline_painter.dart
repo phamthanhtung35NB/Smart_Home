@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 class TimelinePainter extends CustomPainter {
   final String schedule;
 
   TimelinePainter(this.schedule);
+
 //Phương pháp trợ giúp để chuyển đổi chuỗi thời gian (hh: mm) thành phút
   int _convertTimeToMinutes(String timeStr) {
     final parts = timeStr.split(':');
@@ -15,6 +17,7 @@ class TimelinePainter extends CustomPainter {
     }
     return 0;
   }
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -41,7 +44,8 @@ class TimelinePainter extends CustomPainter {
       final startTime = _convertTimeToMinutes(times[0]);
       final endTime = _convertTimeToMinutes(times[1]);
 
-      final startX = (startTime / 1440) * size.width; // 1440 minutes in 24 hours
+      final startX =
+          (startTime / 1440) * size.width; // 1440 minutes in 24 hours
       var endX = (endTime / 1440) * size.width;
 
       // Handle overnight time ranges

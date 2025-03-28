@@ -189,7 +189,7 @@ class StatusCard extends StatelessWidget {
                             : (value) {
                                 updateDatabase(thietBi, value);
                               },
-                        activeColor: autoSystem ? Colors.grey : Colors.yellow,
+                        activeColor: autoSystem ? Colors.grey : Colors.green,
                         inactiveThumbColor: Colors.grey,
                       ),
                     ],
