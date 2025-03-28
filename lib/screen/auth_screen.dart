@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import '../auth_service.dart';
 import 'home_screen.dart';
 import 'pin_setup_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;

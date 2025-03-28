@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import '../auth_service.dart';
 import 'home_screen.dart';
 
 class PINSetupScreen extends StatefulWidget {

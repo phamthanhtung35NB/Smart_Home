@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:rgbs/widgets/app_bar_screen.dart';
 import 'package:rgbs/widgets/custom_drawer.dart';
 import 'package:rgbs/widgets/bottom_app_bar.dart';
-import 'package:rgbs/led_controller.dart';
+import 'package:rgbs/screen/led_controller.dart';
 // import 'package:rgbs/aquarium_manager.dart';
-import 'package:rgbs/auto_status_screen.dart';
+import 'package:rgbs/screen/auto_status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
