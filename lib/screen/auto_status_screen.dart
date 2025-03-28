@@ -8,6 +8,7 @@ import 'package:rgbs/widgets/buid/gesture_switch.dart';
 import 'package:rgbs/widgets/buid/dht_humidity_card.dart';
 import 'package:rgbs/widgets/buid/temperature_card.dart';
 import 'package:rgbs/widgets/buid/status_card2.dart';
+import 'package:rgbs/models/timeline_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -402,12 +403,18 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 thietBi: "fan",
                 status: _fan,
                 updateDatabase: _updateDatabase,
+                onTap: () {
+                  _showThresholdDialog(context, 'Quạt', 'Bật khi >= 26.5°C, Tắt khi <= 25.5°C');
+                },
               ),
               StatusCard2(
                 title: "Sưởi",
                 thietBi: "heater",
                 status: _heater,
                 updateDatabase: _updateDatabase,
+                onTap: () {
+                  _showThresholdDialog(context, 'Sưởi', 'Bật khi <= 22°C, Tắt khi >= 24°C');
+                },
               ),
             ],
           ),
@@ -420,7 +427,177 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     // _database.child('aquarium/$key').set(value);
     _database.child('status/$key').set(value);
   }
+void _showThresholdDialog(BuildContext context, String title, String thresholds) {
+  // Xác định icon và màu sắc dựa trên loại thiết bị
+  IconData deviceIcon = title == 'Quạt' ? Icons.air : Icons.whatshot;
+  Color primaryColor = title == 'Quạt' ? Colors.blue.shade700 : Colors.orange;
 
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Row(
+          children: [
+            Icon(deviceIcon, color: primaryColor),
+            SizedBox(width: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: primaryColor.withOpacity(0.5), width: 1),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ngưỡng nhiệt độ:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    if (title == 'Quạt') _buildThresholdItem('Bật khi', '≥ 26.5°C', Colors.red),
+                    if (title == 'Quạt') _buildThresholdItem('Tắt khi', '≤ 25.5°C', Colors.green),
+                    if (title == 'Sưởi') _buildThresholdItem('Bật khi', '≤ 22°C', Colors.blue),
+                    if (title == 'Sưởi') _buildThresholdItem('Tắt khi', '≥ 24°C', Colors.green),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 15),
+            _buildTemperatureBar(title),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'Đóng',
+              style: TextStyle(color: primaryColor),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Widget _buildThresholdItem(String label, String value, Color valueColor) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Text(
+          '$label: ',
+          style: TextStyle(fontSize: 15),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildTemperatureBar(String deviceType) {
+  return Container(
+    height: 70,
+    padding: EdgeInsets.symmetric(vertical: 10),
+    child: Stack(
+      children: [
+        Container(
+          height: 10,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue, Colors.green, Colors.orange, Colors.red],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+        if (deviceType == 'Quạt') ...[
+          Positioned(
+            left: 200, // Ước tính vị trí cho 26.5°C
+            top: 0,
+            child: _buildTemperatureMarker('26.5°C', 'Bật'),
+          ),
+          Positioned(
+            left: 160, // Ước tính vị trí cho 25.5°C
+            bottom: 5,
+            child: _buildTemperatureMarker('25.5°C', 'Tắt'),
+          ),
+        ],
+        if (deviceType == 'Sưởi') ...[
+          Positioned(
+            left: 70, // Ước tính vị trí cho 22°C
+            top: 0,
+            child: _buildTemperatureMarker('22°C', 'Bật'),
+          ),
+          Positioned(
+            left: 100, // Ước tính vị trí cho 24°C
+            bottom: 0,
+            child: _buildTemperatureMarker('24°C', 'Tắt'),
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+Widget _buildTemperatureMarker(String temp, String action) {
+  Color color = action == 'Bật' ? Colors.green : Colors.red;
+  return Column(
+    children: [
+      Container(
+        width: 2,
+        height: 10,
+        color: Colors.black,
+      ),
+      Text(
+        temp,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      Text(
+        action,
+        style: TextStyle(
+          fontSize: 12,
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ],
+  );
+}
   Widget _buildTemperatureText(double temperature) {
     Color textColor;
     if (temperature >= 26.5) {
@@ -443,141 +620,303 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     );
   }
 
-  void _showScheduleDialog(
-      BuildContext context, String title, String schedule) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: _buildScheduleCard(title, schedule),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+void _showScheduleDialog(BuildContext context, String title, String schedule) {
+  // Xác định icon và màu sắc dựa trên loại thiết bị
+  IconData deviceIcon = title.contains("Đèn") ? Icons.lightbulb : Icons.water_drop;
+  Color primaryColor = title.contains("Đèn") ? Colors.amber.shade700 : Colors.blue.shade700;
 
-  Widget _buildScheduleCard(String title, String schedule) {
-    // Get current time in minutes for comparison
-    final now = DateTime.now();
-    final currentTimeInMinutes = now.hour * 60 + now.minute;
-
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.blue.shade200, width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  title.contains("Đèn") ? Icons.lightbulb : Icons.water,
-                  color: Colors.blue.shade700,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 16),
-            // Text(
-            //   "Lịch trình:",
-            //   style: TextStyle(
-            //     fontSize: 15,
-            //     color: Colors.grey.shade700,
-            //     fontWeight: FontWeight.w500,
-            //   ),
-            // ),
-            const SizedBox(height: 4),
-            Wrap(
-              // căn giữa các chip
-              alignment: WrapAlignment.center,
-
-              // Khoảng cách giữa các chip
-              spacing: 15,
-              children: schedule.split(', ').map((time) {
-                // Phân tích cú pháp phạm vi thời gian và xác định xem nó đang hoạt động hay quá khứ
-                bool isActive = false;
-                bool isPast = false;
-
-                if (_autoSystem) {
-                  final times = time.split(' - ');
-                  // Đảm bảo rằng có đúng 2 thời gian trong phạm vi
-                  if (times.length == 2) {
-                    // Chuyển đổi thời gian thành phút
-                    final startTime = _convertTimeToMinutes(times[0]);
-                    // Chuyển đổi thời gian thành phút
-                    final endTime = _convertTimeToMinutes(times[1]);
-
-                    // Kiểm tra xem thời gian hiện tại có nằm trong phạm vi này hay không
-                    if (startTime < endTime) {
-                      // Phạm vi thời gian bình thường trong cùng một ngày
-                      isActive = currentTimeInMinutes >= startTime &&
-                          currentTimeInMinutes < endTime;
-                      isPast = currentTimeInMinutes >= endTime;
-                    }
-                    // else {
-                    //   // Phạm vi thời gian kéo dài đến nửa đêm
-                    //   isActive = currentTimeInMinutes >= startTime || currentTimeInMinutes < endTime;
-                    //   isPast = currentTimeInMinutes >= endTime && currentTimeInMinutes < startTime;
-                    // }
-                  }
-                }
-
-                // Đặt màu nền thích hợp dựa trên trạng thái
-                Color backgroundColor = Colors.blue.shade50; // Mặc định
-                if (_autoSystem) {
-                  if (isActive) {
-                    backgroundColor =
-                        Colors.green.shade100; //Khoảng thời gian hoạt động
-                  } else if (isPast) {
-                    backgroundColor = Colors.yellow.shade400; // past time slot
-                  }
-                }
-
-                return Chip(
-                  backgroundColor: backgroundColor,
-                  side: BorderSide.none,
-                  label: Text(
-                    time,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: isActive
-                          ? Colors.green.shade900
-                          : Colors.blue.shade900,
-                      fontWeight:
-                          isActive ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  visualDensity: VisualDensity.compact,
-                );
-              }).toList(),
+            Icon(deviceIcon, color: primaryColor),
+            SizedBox(width: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
+        content: Container(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: primaryColor.withOpacity(0.5), width: 1),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.schedule, color: Colors.grey.shade700, size: 18),
+                          SizedBox(width: 6),
+                          Text(
+                            'Lịch trình hoạt động:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      _buildEnhancedScheduleView(schedule),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 15),
+              _buildDailyTimeline(schedule),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'Đóng',
+              style: TextStyle(color: primaryColor),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Widget _buildEnhancedScheduleView(String schedule) {
+  final now = DateTime.now();
+  final currentTimeInMinutes = now.hour * 60 + now.minute;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: schedule.split(', ').map((timeSlot) {
+      final times = timeSlot.split(' - ');
+      final startTime = _convertTimeToMinutes(times[0]);
+      final endTime = _convertTimeToMinutes(times[1]);
+
+      bool isActive = false;
+      if (startTime < endTime) {
+        isActive = currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
+      } else {
+        isActive = currentTimeInMinutes >= startTime || currentTimeInMinutes < endTime;
+      }
+
+      return Container(
+        margin: EdgeInsets.symmetric(vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive ? Colors.green : Colors.grey.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              timeSlot,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? Colors.green.shade800 : Colors.grey.shade800,
+              ),
+            ),
+            if (isActive)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Đang hoạt động',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
+
+Widget _buildDailyTimeline(String schedule) {
+  return Container(
+    height: 80,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Thời gian hoạt động trong ngày:',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        SizedBox(height: 8),
+        Expanded(
+          child: CustomPaint(
+            size: Size(double.infinity, 50),
+            painter: TimelinePainter(schedule),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('00:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text('06:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text('12:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text('18:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+            Text('24:00', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+
+  // Widget _buildScheduleCard(String title, String schedule) {
+  //   // Get current time in minutes for comparison
+  //   final now = DateTime.now();
+  //   final currentTimeInMinutes = now.hour * 60 + now.minute;
+  //
+  //   return Card(
+  //     elevation: 3,
+  //     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(12),
+  //       side: BorderSide(color: Colors.blue.shade200, width: 1),
+  //     ),
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(12),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(
+  //                 title.contains("Đèn") ? Icons.lightbulb : Icons.water,
+  //                 color: Colors.blue.shade700,
+  //                 size: 22,
+  //               ),
+  //               const SizedBox(width: 8),
+  //               Text(
+  //                 title,
+  //                 style: const TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           const Divider(height: 16),
+  //           // Text(
+  //           //   "Lịch trình:",
+  //           //   style: TextStyle(
+  //           //     fontSize: 15,
+  //           //     color: Colors.grey.shade700,
+  //           //     fontWeight: FontWeight.w500,
+  //           //   ),
+  //           // ),
+  //           const SizedBox(height: 4),
+  //           Wrap(
+  //             // căn giữa các chip
+  //             alignment: WrapAlignment.center,
+  //
+  //             // Khoảng cách giữa các chip
+  //             spacing: 15,
+  //             children: schedule.split(', ').map((time) {
+  //               // Phân tích cú pháp phạm vi thời gian và xác định xem nó đang hoạt động hay quá khứ
+  //               bool isActive = false;
+  //               bool isPast = false;
+  //
+  //               if (_autoSystem) {
+  //                 final times = time.split(' - ');
+  //                 // Đảm bảo rằng có đúng 2 thời gian trong phạm vi
+  //                 if (times.length == 2) {
+  //                   // Chuyển đổi thời gian thành phút
+  //                   final startTime = _convertTimeToMinutes(times[0]);
+  //                   // Chuyển đổi thời gian thành phút
+  //                   final endTime = _convertTimeToMinutes(times[1]);
+  //
+  //                   // Kiểm tra xem thời gian hiện tại có nằm trong phạm vi này hay không
+  //                   if (startTime < endTime) {
+  //                     // Phạm vi thời gian bình thường trong cùng một ngày
+  //                     isActive = currentTimeInMinutes >= startTime &&
+  //                         currentTimeInMinutes < endTime;
+  //                     isPast = currentTimeInMinutes >= endTime;
+  //                   }
+  //                   // else {
+  //                   //   // Phạm vi thời gian kéo dài đến nửa đêm
+  //                   //   isActive = currentTimeInMinutes >= startTime || currentTimeInMinutes < endTime;
+  //                   //   isPast = currentTimeInMinutes >= endTime && currentTimeInMinutes < startTime;
+  //                   // }
+  //                 }
+  //               }
+  //
+  //               // Đặt màu nền thích hợp dựa trên trạng thái
+  //               Color backgroundColor = Colors.blue.shade50; // Mặc định
+  //               if (_autoSystem) {
+  //                 if (isActive) {
+  //                   backgroundColor =
+  //                       Colors.green.shade100; //Khoảng thời gian hoạt động
+  //                 } else if (isPast) {
+  //                   backgroundColor = Colors.yellow.shade400; // past time slot
+  //                 }
+  //               }
+  //
+  //               return Chip(
+  //                 backgroundColor: backgroundColor,
+  //                 side: BorderSide.none,
+  //                 label: Text(
+  //                   time,
+  //                   style: TextStyle(
+  //                     fontSize: 15,
+  //                     color: isActive
+  //                         ? Colors.green.shade900
+  //                         : Colors.blue.shade900,
+  //                     fontWeight:
+  //                         isActive ? FontWeight.bold : FontWeight.normal,
+  //                   ),
+  //                 ),
+  //                 padding: const EdgeInsets.symmetric(horizontal: 4),
+  //                 visualDensity: VisualDensity.compact,
+  //               );
+  //             }).toList(),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
 //Phương pháp trợ giúp để chuyển đổi chuỗi thời gian (hh: mm) thành phút
   int _convertTimeToMinutes(String timeStr) {

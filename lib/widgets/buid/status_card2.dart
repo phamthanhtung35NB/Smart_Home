@@ -5,17 +5,20 @@ class StatusCard2 extends StatelessWidget {
   final String thietBi;
   final bool status;
   final Function(String, dynamic) updateDatabase;
-
+  final VoidCallback onTap;
   StatusCard2({
     required this.title,
     required this.thietBi,
     required this.status,
     required this.updateDatabase,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GestureDetector(
+        onTap: onTap, // Add this line
+        child: Card(
       elevation: 3,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       shape: RoundedRectangleBorder(
@@ -79,6 +82,8 @@ class StatusCard2 extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
+
   }
 }

@@ -257,6 +257,38 @@ void handleFirebaseStream(FirebaseData *fbdo) {
             }
         }
     }
+    else if (path =="/fan") {
+        is_fan = fbdo->boolData();
+        if (autoSystem == true) {
+            if (is_fan == true) {
+                Firebase.RTDB.setBool(fbdo, "/status/fan", true);
+            } else {
+                Firebase.RTDB.setBool(fbdo, "/status/fan", false);
+            }
+        } else if (autoSystem == false) {
+            if (is_fan == true) {
+                digitalWrite(FAN_PIN, LOW);
+            } else {
+                digitalWrite(FAN_PIN, HIGH);
+            }
+        }
+    }
+    else if (path =="/heater") {
+        is_heater = fbdo->boolData();
+        if (autoSystem == true) {
+            if (is_heater == true) {
+                Firebase.RTDB.setBool(fbdo, "/status/heater", true);
+            } else {
+                Firebase.RTDB.setBool(fbdo, "/status/heater", false);
+            }
+        } else if (autoSystem == false) {
+            if (is_heater == true) {
+                digitalWrite(HEATER_PIN, LOW);
+            } else {
+                digitalWrite(HEATER_PIN, HIGH);
+            }
+        }
+    }
         // /led/currentEffect
     else if (path == "/currentEffect") {
         currentEffect = fbdo->intData();
