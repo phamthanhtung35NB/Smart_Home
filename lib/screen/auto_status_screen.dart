@@ -70,23 +70,28 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  Future<void> _sendPushNotification() async {
+  Future<void> _sendPushNotification(double t) async {
+    // Cấu hình chi tiết thông báo cho Android
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'your_channel_id',
-      'your_channel_name',
-      channelDescription: 'your_channel_description',
-      importance: Importance.max,
-      priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('notification_sound'),
+      'your_channel_id', // ID của kênh thông báo
+      'your_channel_name', // Tên của kênh thông báo
+      channelDescription: 'your_channel_description', // Mô tả của kênh thông báo
+      importance: Importance.max, // Mức độ quan trọng của thông báo (cao nhất)
+      priority: Priority.high, // Độ ưu tiên của thông báo (cao)
+      sound: RawResourceAndroidNotificationSound('notification_sound'), // Âm thanh thông báo
     );
+
+    // Cấu hình chi tiết thông báo chung cho các nền tảng
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    // Hiển thị thông báo đẩy
     await flutterLocalNotificationsPlugin.show(
-      0,
-      'Cảnh báo nhiệt độ',
-      'Nhiệt độ vượt ngưỡng cho phép!',
-      platformChannelSpecifics,
+      0, // ID của thông báo
+      'Cảnh báo nhiệt độ', // Tiêu đề của thông báo
+      'Nhiệt độ hiện tại: $t \nĐã vượt ngưỡng an toàn!', // Nội dung của thông báo
+      platformChannelSpecifics, // Chi tiết cấu hình thông báo
     );
   }
 
@@ -137,8 +142,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
         });
-        if (_temperature >= 26 || _temperature <= 23) {
-          _sendPushNotification();
+        if (_temperature <=22 || _temperature >= 26.5) {
+          _sendPushNotification(_temperature);
         }
       }
     });
