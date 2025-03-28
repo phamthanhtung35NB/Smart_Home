@@ -33,20 +33,20 @@ void readDHTSensor() {
     float hif = dht.computeHeatIndex(f, h);
     float hic = dht.computeHeatIndex(t, h, false);
 
-    Serial.print("Độ ẩm:         ");
-    Serial.print(h);
-    Serial.println(" %t");
-    Serial.print("Nhiệt độ:      ");
-    Serial.print(t);
-    Serial.print(" *C ");
-    Serial.print(f);
-    Serial.println(" *Ft");
-    Serial.print("Chỉ số nhiệt:  ");
+    // Serial.print("Độ ẩm:         ");
+    // Serial.print(h);
+    // Serial.println(" %t");
+    // Serial.print("Nhiệt độ:      ");
+    // Serial.print(t);
+    // Serial.print(" *C ");
+    // Serial.print(f);
+    // Serial.println(" *Ft");
+    // Serial.print("Chỉ số nhiệt:  ");
 
-    Serial.print(hic);
-    Serial.print(" *C ");
-    Serial.print(hif);
-    Serial.println(" *F");
+    // Serial.print(hic);
+    // Serial.print(" *C ");
+    // Serial.print(hif);
+    // Serial.println(" *F");
     updateDHTSensor(h, t, f, hic, hif);
 }
 #endif

@@ -34,6 +34,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   double _dhtTemperatureF = 0.0;
   double _heatIndexC = 0.0;
   double _heatIndexF = 0.0;
+  String _warning = '';
   late StreamSubscription<DatabaseEvent> _dhtSubscription;
 
   late Timer _timer;
@@ -47,6 +48,8 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   late StreamSubscription<DatabaseEvent> _timeSubscription;
   late StreamSubscription<DatabaseEvent> _fanSubscription;
   late StreamSubscription<DatabaseEvent> _heaterSubscription;
+  late StreamSubscription<DatabaseEvent> _warningSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -177,10 +180,19 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       }
     });
 
-    _heaterSubscription = _database.child('status/heater').onValue.listen((event) {
+    _heaterSubscription =
+        _database.child('status/heater').onValue.listen((event) {
       if (event.snapshot.value != null) {
         setState(() {
           _heater = event.snapshot.value as bool;
+        });
+      }
+    });
+    _warningSubscription =
+        _database.child('status/warning').onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        setState(() {
+          _warning = event.snapshot.value as String;
         });
       }
     });
@@ -203,6 +215,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
     _fanSubscription.cancel();
     _heaterSubscription.cancel();
     _dhtSubscription.cancel(); // Add this line
+    _warningSubscription.cancel();
     _timer.cancel();
     super.dispose();
   }
@@ -543,9 +556,10 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               const SizedBox(height: 15),
               temperatureCardConstruction(
                 'Nhiệt độ bể cá',
+                _warning,
                 Icon(Icons.thermostat, color: Theme.of(context).primaryColor),
                 (() {
-                  if (_temperature >= 26) {
+                  if (_temperature >= 26.5) {
                     return Text(
                       '${_temperature.toStringAsFixed(3)} °C',
                       style: const TextStyle(
@@ -554,13 +568,22 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                         color: Colors.redAccent,
                       ),
                     );
-                  } else if (_temperature < 26 && _temperature > 23) {
+                  } else if (_temperature <= 25.5 && _temperature >= 23) {
                     return Text(
                       '${_temperature.toStringAsFixed(3)} °C',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blueAccent,
+                        color: Colors.greenAccent,
+                      ),
+                    );
+                  } else if (_temperature <= 23) {
+                    return Text(
+                      '${_temperature.toStringAsFixed(3)} °C',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
                       ),
                     );
                   } else {
@@ -569,7 +592,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.redAccent,
+                        color: Colors.blueAccent,
                       ),
                     );
                   }
@@ -588,9 +611,9 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               //  '4:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 3:00',
               _buildStatusCard('Bơm Oxi', 'waterPump', _waterPump,
                   '00:00 - 03:00, 04:00 - 11:00, 12:00 - 14:00, 17:00 - 20:00, 22:00 - 00:00'),
-              const SizedBox(height: 20),
-              _buildStatusCard('Quạt', 'fan', _fan, ''),
-              _buildStatusCard('Sưởi', 'heater', _heater, ''),
+              // const SizedBox(height: 20),
+              _buildStatusCard2('Quạt', 'fan', _fan),
+              _buildStatusCard2('Sưởi', 'heater', _heater),
               const Text(
                 'Lịch trình hoạt động:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -611,6 +634,95 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   void _updateDatabase(String key, dynamic value) {
     // _database.child('aquarium/$key').set(value);
     _database.child('status/$key').set(value);
+  }
+
+  Widget _buildStatusCard2(String title, String thietBi, bool status) {
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.blue.shade200, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      "Trạng thái: ",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      status ? 'Bật' : 'Tắt',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: status ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      status ? Icons.check_circle : Icons.cancel,
+                      color: status ? Colors.green : Colors.grey,
+                      size: 22,
+                    ),
+                    if (thietBi == 'fan') ...[
+                      Switch(
+                        value: _fan,
+                        onChanged: _autoSystem
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _fan = value;
+                                  _updateDatabase(thietBi, value);
+                                });
+                              },
+                        activeColor: _autoSystem ? Colors.grey : Colors.red,
+                        inactiveThumbColor: Colors.grey,
+                      ),
+                    ] else ...[
+                      Switch(
+                        value: _heater,
+                        onChanged: _autoSystem
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _heater = value;
+                                  _updateDatabase(thietBi, value);
+                                });
+                              },
+                        activeColor: _autoSystem ? Colors.grey : Colors.red,
+                        inactiveThumbColor: Colors.grey,
+                      ),
+                    ]
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildStatusCard(
@@ -829,6 +941,10 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
       return _convertTimeToMinutes(parts[1]);
     }).toList();
 
+    if (times.isEmpty) {
+      return '0 Phút'; // Trả về giá trị mặc định nếu danh sách trống
+    }
+
     times.sort();
     for (final time in times.reversed) {
       if (currentTimeInMinutes >= time) {
@@ -1026,7 +1142,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
   }
 
   Widget temperatureCardConstruction(
-      String title, Widget leading, Widget trailing) {
+      String title, String warning, Widget leading, Widget trailing) {
     return Card(
       color: Colors.white,
       elevation: 4,
@@ -1056,6 +1172,12 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               ],
             ),
             const SizedBox(height: 10),
+            //warning
+            Text(
+              _warning,
+              style: const TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.bold, color: Colors.red),
+            ),
             const Divider(
               color: Colors.grey,
               thickness: 1,

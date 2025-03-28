@@ -6,10 +6,10 @@
 
 void updateTemperature(FirebaseData *fbdo, float temperature) {
     if (temperature != -127.00) {
-        if (temperature >= 30.0) {
-            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Quá nóng! Kiểm tra hệ thống làm mát!");
-        } else if (temperature <= 20.0) {
-            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Quá lạnh! Kiểm tra hệ thống sưởi!");
+        if (temperature >= 26.5) {
+            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Đang làm mát");
+        } else if (temperature <= 22.0) {
+            Firebase.RTDB.setString(fbdo, "/status/warning", "⚠️ Đang sưởi bể!");
         } else {
             Firebase.RTDB.setString(fbdo, "/status/warning", "Nhiệt độ ổn định");
         }
@@ -56,7 +56,7 @@ void getTemperatures() {
     sensors.requestTemperatures();
     float temperatureC = sensors.getTempCByIndex(0);
     if (temperatureC == -127.00) {
-              Firebase.RTDB.setFloat(fbdo, "/aquarium/temperature", -99999);
+              // Firebase.RTDB.setFloat(&fbdo, "/aquarium/temperature", -99999);
         Serial.println("⚠️ Error: DS18B20 sensor not found!");
         return;  // Thoát khỏi hàm nếu cảm biến lỗi
     
