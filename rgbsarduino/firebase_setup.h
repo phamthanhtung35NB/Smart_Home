@@ -55,6 +55,7 @@ void _syncDataFromFirebase(FirebaseData *fbdo) {
     }
     if (Firebase.RTDB.getBool(fbdo, "/status/fan")) {
         is_fan = fbdo->boolData();
+        digitalWrite(FAN_PIN, is_bom ? LOW : HIGH);
     }
     if (Firebase.RTDB.getBool(fbdo, "/status/heater")) {
         is_heater = fbdo->boolData();
