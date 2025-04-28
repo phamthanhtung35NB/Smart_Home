@@ -60,6 +60,7 @@ void setup() {
         Serial.println("Cannot proceed without WiFi connection.");
         initWifi();
     }
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
     Serial.println("setup done");
 }
 

@@ -149,7 +149,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
         setState(() {
           _temperature = (event.snapshot.value as num).toDouble();
         });
-        if (_temperature <= 22 || _temperature >= 26.5) {
+        if (_temperature <= 22 || _temperature >= 27.2) {
           _sendPushNotification(_temperature);
         }
       }
@@ -411,7 +411,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
                 updateDatabase: _updateDatabase,
                 onTap: () {
                   ThresholdDialog.show(
-                      context, 'Quạt', 'Bật khi >= 26.5°C, Tắt khi <= 25.5°C');
+                      context, 'Quạt', 'Bật khi >= 27.2°C, Tắt khi <= 26.3°C');
                 },
               ),
               StatusCard2(
