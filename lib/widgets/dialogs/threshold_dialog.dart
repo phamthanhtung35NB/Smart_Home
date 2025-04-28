@@ -51,10 +51,10 @@ class ThresholdDialog {
                       ),
                       SizedBox(height: 10),
                       if (title == 'Quạt')
-                        _buildThresholdItem('Bật khi', '≥ 26.5°C', Colors.red),
+                        _buildThresholdItem('Bật khi', '≥ 27.2°C', Colors.red),
                       if (title == 'Quạt')
                         _buildThresholdItem(
-                            'Tắt khi', '≤ 25.5°C', Colors.green),
+                            'Tắt khi', '≤ 26.3°C', Colors.green),
                       if (title == 'Sưởi')
                         _buildThresholdItem('Bật khi', '≤ 22°C', Colors.blue),
                       if (title == 'Sưởi')

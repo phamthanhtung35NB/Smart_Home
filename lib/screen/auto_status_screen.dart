@@ -405,7 +405,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
               ),
               const SizedBox(height: 30),
               StatusCard2(
-                title: "Quạt",
+                title: "Tản Nhiệt",
                 thietBi: "fan",
                 status: _fan,
                 updateDatabase: _updateDatabase,

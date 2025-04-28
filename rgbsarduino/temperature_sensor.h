@@ -27,11 +27,11 @@ void updateTemperature(FirebaseData *fbdo, float temperature) {
         // Control fan and heater with hysteresis
         if (autoSystem) {
             // Điều khiển quạt
-            if (temperature >= 26.5 && !is_fan) {  // Chỉ bật nếu chưa bật
+            if (temperature >= 27.2 && !is_fan) {  // Chỉ bật nếu chưa bật
                 digitalWrite(FAN_PIN, LOW);
                 is_fan = true;
                 Firebase.RTDB.setBool(fbdo, "/status/fan", true);
-            } else if (temperature <= 25.5 && is_fan) {  // Chỉ tắt nếu đang bật
+            } else if (temperature <= 26.3 && is_fan) {  // Chỉ tắt nếu đang bật
                 digitalWrite(FAN_PIN, HIGH);
                 is_fan = false;
                 Firebase.RTDB.setBool(fbdo, "/status/fan", false);
