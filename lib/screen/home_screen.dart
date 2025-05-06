@@ -6,6 +6,7 @@ import 'package:rgbs/screen/led_controller.dart';
 
 // import 'package:rgbs/aquarium_manager.dart';
 import 'package:rgbs/screen/auto_status_screen.dart';
+import 'location_history_screen.dart';
 import 'web_view_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -27,9 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
         case 0:
           _title = 'Bể cá';
           break;
-        // case 1:
-        //   _title = 'Điều khiển Led RGB';
-        //   break;
+        case 1:
+          _title = 'Điều khiển Led RGB';
+          break;
       }
     });
     _pageController.jumpToPage(index);
@@ -42,9 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
         case 0:
           _title = 'Bể cá';
           break;
-        // case 1:
-        //   _title = 'Điều khiển Led RGB';
-        //   break;
+        case 1:
+          _title = 'Điều khiển Led RGB';
+          break;
       }
     });
   }
@@ -76,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPageChanged: _onPageChanged,
         children: [
           AutoStatusScreen(), // ✅ Trang Home đầu tiên
+          LocationHistoryScreen() // trang lịch sử vị trí
           // LedController(),
         ],
       ),
