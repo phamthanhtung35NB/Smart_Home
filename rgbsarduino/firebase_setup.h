@@ -28,7 +28,7 @@ void initFirebase() {
     bool success = true;
 
     success &= Firebase.RTDB.beginStream(&fbdo_status, "/status");
-    success &= Firebase.RTDB.beginStream(&fbdo_led, "/led");
+    // success &= Firebase.RTDB.beginStream(&fbdo_led, "/led");
 
     if (!success) {
         Serial.printf("Stream setup failed: %s\n", fbdo_status.errorReason().c_str());
@@ -60,29 +60,29 @@ void _syncDataFromFirebase(FirebaseData *fbdo) {
     if (Firebase.RTDB.getBool(fbdo, "/status/heater")) {
         is_heater = fbdo->boolData();
     }
-    if (Firebase.RTDB.getInt(fbdo, "/led/currentEffect")) {
-        currentEffect = fbdo->intData();
-    }
-    if (Firebase.RTDB.getInt(fbdo, "/led/brightness")) {
-        brightness = fbdo->intData();
-        pixels.setBrightness(brightness);
-    }
-    if (Firebase.RTDB.getInt(fbdo, "/led/speed")) {
-        speed = fbdo->intData();
-    }
-    if (Firebase.RTDB.getJSON(fbdo, "/led/color")) {
-        FirebaseJson json = fbdo->jsonObject();
-        FirebaseJsonData jsonData;
+    // if (Firebase.RTDB.getInt(fbdo, "/led/currentEffect")) {
+    //     currentEffect = fbdo->intData();
+    // }
+    // if (Firebase.RTDB.getInt(fbdo, "/led/brightness")) {
+    //     brightness = fbdo->intData();
+    //     pixels.setBrightness(brightness);
+    // }
+    // if (Firebase.RTDB.getInt(fbdo, "/led/speed")) {
+    //     speed = fbdo->intData();
+    // }
+    // if (Firebase.RTDB.getJSON(fbdo, "/led/color")) {
+    //     FirebaseJson json = fbdo->jsonObject();
+    //     FirebaseJsonData jsonData;
 
-        json.get(jsonData, "r");
-        int r = jsonData.success ? jsonData.to<int>() : 0;
-        json.get(jsonData, "g");
-        int g = jsonData.success ? jsonData.to<int>() : 0;
-        json.get(jsonData, "b");
-        int b = jsonData.success ? jsonData.to<int>() : 0;
+    //     json.get(jsonData, "r");
+    //     int r = jsonData.success ? jsonData.to<int>() : 0;
+    //     json.get(jsonData, "g");
+    //     int g = jsonData.success ? jsonData.to<int>() : 0;
+    //     json.get(jsonData, "b");
+    //     int b = jsonData.success ? jsonData.to<int>() : 0;
 
-        selectedColor = pixels.Color(r, g, b);
-    }
+    //     selectedColor = pixels.Color(r, g, b);
+    // }
 }
 
 /**

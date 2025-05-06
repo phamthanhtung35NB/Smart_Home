@@ -4,6 +4,7 @@
 #include <addons/TokenHelper.h>
 #include <time.h>
 #include "config.h"
+#include "esp_wifi.h"
 #include "wifi_setup.h"
 #include "firebase_setup.h"
 #include "ntp_client.h"
@@ -17,8 +18,8 @@ void autoRunSystem();                              // Declare autoRunSystem func
 void setup() {
     Serial.println("Starting...");
     Serial.begin(115200);
-    pixels.begin();
-    pixels.setBrightness(brightness);
+    // pixels.begin();
+    // pixels.setBrightness(brightness);
 
     pinMode(LedBeLow, OUTPUT);
     digitalWrite(LedBeLow, HIGH);
@@ -60,8 +61,41 @@ void setup() {
         Serial.println("Cannot proceed without WiFi connection.");
         initWifi();
     }
+// Disable all wakeup sources
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+Serial.println("Disable all wakeup sources");
+    esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
+    Serial.println("Power domain RTC peripheral on");
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Thay thế WIFI_PS_NONE
+
     Serial.println("setup done");
+
+    // print tất cả các thông số
+    Serial.print("SSID: ");
+    Serial.println(ssid);
+    Serial.print("Password: ");
+    Serial.println(password);
+    Serial.print("Firebase Database URL: ");
+    Serial.println(DATABASE_URL);
+    Serial.print("Firebase API Key: ");
+    Serial.println(API_KEY);
+    Serial.print("Firebase User Email: ");
+    Serial.println(USER_EMAIL);
+    Serial.print("Firebase User Password: ");
+    Serial.println(USER_PASSWORD);
+    // print tất cả các trạng thái các biến
+    Serial.print("is_led: ");
+    Serial.println(is_led);
+    Serial.print("is_bom: ");
+    Serial.println(is_bom);
+    Serial.print("is_fan: ");
+    Serial.println(is_fan);
+    Serial.print("is_heater: ");
+    Serial.println(is_heater);
+    // Serial.print("is_ledRgbs: ");
+    // Serial.println(is_ledRgbs);
+    Serial.print("is_bom: ");
+    Serial.println(is_bom);
 }
 
 void loop() {
@@ -69,32 +103,32 @@ void loop() {
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("WiFi disconnected. Reconnecting...");
         if (wifiState == true) {
-            blinkLED(LedBeLow, 2, 500);  // Nhấp nháy 3 lần khi mất kết nối
+            blinkLED(bomKKLow, 2, 500);  // Nhấp nháy 3 lần khi mất kết nối
             wifiState = false;
-            if (is_led == true) {
-                digitalWrite(LedBeLow, LOW);
-            } else if (is_led == false) {
-                digitalWrite(LedBeLow, HIGH);
+            if (is_bom == true) {
+                digitalWrite(bomKKLow, LOW);
+            } else if (is_bom == false) {
+                digitalWrite(bomKKLow, HIGH);
             }
         }
         initWifi();
         if (WiFi.status() == WL_CONNECTED) {
-            blinkLED(LedBeLow, 2, 100);  // Nhấp nháy 2 lần khi kết nối lại
-            if (is_led == true) {
-                digitalWrite(LedBeLow, LOW);
-            } else if (is_led == false) {
-                digitalWrite(LedBeLow, HIGH);
+            blinkLED(bomKKLow, 2, 100);  // Nhấp nháy 2 lần khi kết nối lại
+            if (is_bom == true) {
+                digitalWrite(bomKKLow, LOW);
+            } else if (is_bom == false) {
+                digitalWrite(bomKKLow, HIGH);
             }
         }
     }
     // Kiểm tra kết nối Firebase
     if (Firebase.ready()) {
         checkFirebaseStream(&fbdo_status);
-        checkFirebaseStream(&fbdo_led);
+        // checkFirebaseStream(&fbdo_led);
         //        checkFirebaseStream(&fbdo_lamp);
         // checkFirebaseStream(&fbdo_aquarium);
     }
-    delay(100);
+    vTaskDelay(100 / portTICK_PERIOD_MS);  // Thay delay(100) bằng vTaskDelay
     // autoSyncTime();
     // khi hệ thống tự động, chay autoRunSystem
     if (autoSystem) {
@@ -103,9 +137,9 @@ void loop() {
     getTemperatures();
     readDHTSensor();  // Đọc dữ liệu cảm biến DHT11
     // Execute LED effects based on currentEffect
-    if (is_ledRgbs == true) {
-        executeLEDEffects();
-    }
+    // if (is_ledRgbs == true) {
+    //     executeLEDEffects();
+    // }
 }
 
 
@@ -155,14 +189,19 @@ void autoRunSystem() {
         if (currentTime >= 780 && currentTime < 1410) {
             if (!is_led) {
                 digitalWrite(LedBeLow, LOW);
-                Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+                if (!Firebase.RTDB.getBool(&fbdo, "/status/bigLight") || fbdo.boolData() != true) {
+                    Firebase.RTDB.setBool(&fbdo, "/status/bigLight", true);
+                }
+
                 // Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", true);
                 is_led = true;
             }
         } else {
             if (is_led) {
                 digitalWrite(LedBeLow, HIGH);
-                Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+                if (Firebase.RTDB.getBool(&fbdo, "/status/bigLight") || fbdo.boolData() != false) {
+                    Firebase.RTDB.setBool(&fbdo, "/status/bigLight", false);
+                }
                 // Firebase.RTDB.setBool(&fbdo, "/aquarium/bigLight", false);
                 is_led = false;
             }
@@ -177,23 +216,27 @@ void autoRunSystem() {
         if (shouldTurnOn) {
             if (is_bom == false) {
                 digitalWrite(bomKKLow, LOW);
-                Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
+                if (!Firebase.RTDB.getBool(&fbdo, "/status/waterPump") || fbdo.boolData() != true) {
+                    Firebase.RTDB.setBool(&fbdo, "/status/waterPump", true);
+                }
                 // Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", true);
                 is_bom = true;
             }
         } else {
             if (is_bom == true) {
                 digitalWrite(bomKKLow, HIGH);
-                Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
+                if (Firebase.RTDB.getBool(&fbdo, "/status/waterPump") || fbdo.boolData() != false) {
+                    Firebase.RTDB.setBool(&fbdo, "/status/waterPump", false);
+                }
                 // Firebase.RTDB.setBool(&fbdo, "/aquarium/waterPump", false);
                 is_bom = false;
             }
         }
         // Cập nhật thời gian lên Firebase mỗi 20 phút
         if (currentMinute == 0 || currentMinute == 20 || currentMinute == 40) {
-            if (currentEffect == 0) {
-                tatDen();
-            }
+            // if (currentEffect == 0) {
+            //     tatDen();
+            // }
             timeClient.forceUpdate();
             currentHour = timeClient.getHours();
             currentMinute = timeClient.getMinutes();
@@ -201,8 +244,27 @@ void autoRunSystem() {
 
             String currentTime = String(currentHour) + ":" + (currentMinute < 10 ? "0" : "") +
                                  String(currentMinute) + ":" + String(currentSecond);
-            Firebase.RTDB.setString(&fbdo, "/aquarium/readtime", currentTime);
-            delay(60000);
+            String timeFromFirebase = "";
+
+            if (Firebase.RTDB.getString(&fbdo, "/aquarium/readtime", &timeFromFirebase)) {
+                // Tách phút từ currentTime
+                int currentMinSep1 = currentTime.indexOf(":");
+                int currentMinSep2 = currentTime.indexOf(":", currentMinSep1 + 1);
+                int currentMinuteExtracted = currentTime.substring(currentMinSep1 + 1, currentMinSep2).toInt();
+
+                // Tách phút từ Firebase
+                int fbMinSep1 = timeFromFirebase.indexOf(":");
+                int fbMinSep2 = timeFromFirebase.indexOf(":", fbMinSep1 + 1);
+                int firebaseMinuteExtracted = timeFromFirebase.substring(fbMinSep1 + 1, fbMinSep2).toInt();
+
+                // So sánh phút
+                if (currentMinuteExtracted != firebaseMinuteExtracted) {
+                    Firebase.RTDB.setString(&fbdo, "/aquarium/readtime", currentTime);
+                }
+            } else {
+                Serial.println("Lỗi khi đọc readtime: " + fbdo.errorReason());
+            }
+
         }
     } else {
         Serial.println("Waiting for NTP time sync...");
@@ -219,6 +281,12 @@ void handleFirebaseStream(FirebaseData *fbdo) {
     //    Serial.print("Stream path: ");
     //    Serial.println(path);
     // /status/auto
+    Serial.print("Stream path: ");
+    Serial.println(path);
+    Serial.print("Stream data: ");
+    Serial.println(fbdo->stringData());
+
+
     if (path == "/auto") {
         autoSystem = fbdo->boolData();
         if (autoSystem == true) {
@@ -291,15 +359,16 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         }
     }
         // /led/currentEffect
-    else if (path == "/currentEffect") {
-        currentEffect = fbdo->intData();
-        if (currentEffect == 0) {
-            is_ledRgbs = false;
-            tatDen();
-        } else {
-            is_ledRgbs = true;
-        }
-    }
+    // else if (path == "/currentEffect") {
+    //     currentEffect = fbdo->intData();
+    //     if (currentEffect == 0) {
+    //         is_ledRgbs = false;
+    //         tatDen();
+
+    //     } else {
+    //         is_ledRgbs = true;
+    //     }
+    // }
         //        // /lamp/level
         //    else if (path == "/level") {
         //        levelLampHighState = fbdo->boolData();
@@ -329,42 +398,42 @@ void handleFirebaseStream(FirebaseData *fbdo) {
         }
     }
         // /led/brightness
-    else if (path == "/brightness") {
-        brightness = fbdo->intData();
-        pixels.setBrightness(brightness);
-    }
+    // else if (path == "/brightness") {
+    //     brightness = fbdo->intData();
+    //     pixels.setBrightness(brightness);
+    // }
         // /aquarium/airPumpSpeed
         // else if (path == "/airPumpSpeed") {
         //     airPumpSpeed = fbdo->intData();
         //     analogWrite(ena, map(airPumpSpeed, 0, 9, 0, 255));
         // }
         // /led/speed
-    else if (path == "/speed") {
-        speed = fbdo->intData();
-    }
+    // else if (path == "/speed") {
+    //     speed = fbdo->intData();
+    // }
         // /led/color
-    else if (path == "/color") {
-        FirebaseJson json = fbdo->jsonObject();
-        FirebaseJsonData jsonData;
-        int r = 0, g = 0, b = 0;
+    // else if (path == "/color") {
+    //     FirebaseJson json = fbdo->jsonObject();
+    //     FirebaseJsonData jsonData;
+    //     int r = 0, g = 0, b = 0;
 
-        json.get(jsonData, "r");
-        if (jsonData.success) {
-            r = jsonData.to<int>();
-        }
+    //     json.get(jsonData, "r");
+    //     if (jsonData.success) {
+    //         r = jsonData.to<int>();
+    //     }
 
-        json.get(jsonData, "g");
-        if (jsonData.success) {
-            g = jsonData.to<int>();
-        }
+    //     json.get(jsonData, "g");
+    //     if (jsonData.success) {
+    //         g = jsonData.to<int>();
+    //     }
 
-        json.get(jsonData, "b");
-        if (jsonData.success) {
-            b = jsonData.to<int>();
-        }
+    //     json.get(jsonData, "b");
+    //     if (jsonData.success) {
+    //         b = jsonData.to<int>();
+    //     }
 
-        selectedColor = pixels.Color(r, g, b);
-    }
+    //     selectedColor = pixels.Color(r, g, b);
+    // }
 }
 
 //// Cập nhật trạng thái đèn bàn học
