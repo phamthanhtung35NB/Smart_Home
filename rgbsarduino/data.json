@@ -1,0 +1,52 @@
+{
+  "aquarium": {
+    "readtime": "14:20:1",
+    "temperature": 29.25,
+    "temperatureOld": 29.125,
+    "time": "15:54:11"
+  },
+  "dht": {
+    "heatIndexC": 30.26137,
+    "heatIndexF": 86.47101,
+    "humidity": 30.3,
+    "temperatureC": 31.5,
+    "temperatureF": 88.7
+  },
+  "led": {
+    "brightness": 255,
+    "color": {
+      "b": 247,
+      "g": 7,
+      "r": 37
+    },
+    "currentEffect": 1,
+    "speed": 131
+  },
+  "locations": {
+    "183720_040425": {
+      "accuracy": 13.661,
+      "latitude": 21.009561,
+      "longitude": 105.7807784,
+      "source": "multi_attempt_position",
+      "timestamp": 1743773838154,
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+    },
+    "442400_270425": {
+      "accuracy": 15.336,
+      "latitude": 21.0095761,
+      "longitude": 105.7808057,
+      "source": "cached_high_accuracy",
+      "timestamp": 1745688284655,
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    }
+  },
+  "status": {
+    "auto": false,
+    "bigLight": true,
+    "fan": true,
+    "heater": false,
+    "time": "21:20:1",
+    "warning": "⚠️ Đang làm mát",
+    "waterPump": false
+  }
+}

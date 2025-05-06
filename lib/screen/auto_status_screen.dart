@@ -253,6 +253,7 @@ class _AutoStatusScreenState extends State<AutoStatusScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               // Add auto system switch
               Card(
                 child: Column(

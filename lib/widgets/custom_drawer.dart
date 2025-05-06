@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../screen/location_history_screen.dart';
+
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
@@ -28,6 +30,18 @@ class CustomDrawer extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context); // Close the drawer
                 // Navigate to Home screen
+              },
+            ),
+            // Add this to your CustomDrawer widget
+            ListTile(
+              leading: Icon(Icons.location_history),
+              title: Text('Lịch sử vị trí'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LocationHistoryScreen()),
+                );
               },
             ),
             ListTile(

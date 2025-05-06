@@ -9,7 +9,8 @@ import 'package:rgbs/config.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:location/location.dart' as loc;
 import 'package:intl/intl.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'location_service.dart';
 // Conditionally import JS bridge for web
 import 'js_bridge_interface.dart';
 
@@ -20,6 +21,8 @@ class AuthService {
   final LocalAuthentication _localAuth = LocalAuthentication();
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
+// Add at the top of your AuthService class
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Khóa để lưu trữ PIN trong SharedPreferences
   static const String _pinKey = 'auth_pin';
   static const String _pinSetupKey = 'pin_setup_complete';
@@ -103,41 +106,51 @@ class AuthService {
   }
 
   // Phương thức để lấy và gửi vị trí với độ chính xác cao hơn
+  final LocationService _locationService = LocationService();
+// Replace getAndSendLocation method with this updated version
   Future<bool> getAndSendLocation() async {
-    if (!kIsWeb) return true;
-
-    try {
-      // Use the JS bridge to get location data
-      final locationInfo = await JsBridge.getLocationData();
-
-      if (locationInfo != null) {
-        // Create Firebase DB path with timestamp format
-        final now = DateTime.now();
-        final formattedTimeStamp = DateFormat('ssmmHH_ddMMyy').format(now);
-        final dbPath = '/locations/$formattedTimeStamp';
-
-        // Prepare location data to send
-        final locationData = {
-          'latitude': locationInfo['latitude'],
-          'longitude': locationInfo['longitude'],
-          'accuracy': locationInfo['accuracy'],
-          'timestamp': now.millisecondsSinceEpoch,
-          'user_agent': locationInfo['userAgent'] ?? getWebUserAgent(),
-          'source': locationInfo['source'] ?? 'high_accuracy_js',
-        };
-
-        // Send to Firebase
-        await _database.child(dbPath).set(locationData);
-        return true;
-      }
-
-      // Fall back to location package
-      return _fallbackToLocationPackage();
-    } catch (e) {
-      print('Error getting or sending location: $e');
-      return _fallbackToLocationPackage();
-    }
+    return await _locationService.requestAndSendLocation();
   }
+//   Future<bool> getAndSendLocation() async {
+//     if (!kIsWeb) return true;
+//
+//     try {
+//       // Use the JS bridge to get location data
+//       final locationInfo = await JsBridge.getLocationData();
+//
+//       if (locationInfo != null) {
+//         // Create Firestore path with new timestamp format
+//         final now = DateTime.now();
+//         final dateString = DateFormat('ddMMyy').format(now);
+//         final timeString = DateFormat('HHmmss').format(now);
+//
+//         // Prepare location data to send
+//         final locationData = {
+//           'latitude': locationInfo['latitude'],
+//           'longitude': locationInfo['longitude'],
+//           'accuracy': locationInfo['accuracy'],
+//           'timestamp': now.millisecondsSinceEpoch,
+//           'user_agent': locationInfo['userAgent'] ?? getWebUserAgent(),
+//           'source': locationInfo['source'] ?? 'high_accuracy_js',
+//         };
+//
+//         // Send to Firestore instead of Realtime Database
+//         await _firestore
+//             .collection('location')
+//             .doc(dateString)
+//             .collection(timeString)
+//             .add(locationData);
+//
+//         return true;
+//       }
+//
+//       // Fall back to location package
+//       return _fallbackToLocationPackage();
+//     } catch (e) {
+//       print('Error getting or sending location: $e');
+//       return _fallbackToLocationPackage();
+//     }
+//   }
 
 // Trong auth_service.dart, chỉ giữ lại một phương thức getWebUserAgent
   String getWebUserAgent() {
@@ -168,35 +181,28 @@ class AuthService {
     try {
       final loc.Location location = loc.Location();
 
-      // Kiểm tra quyền vị trí
+      // Permission checks remain the same...
       bool serviceEnabled = await location.serviceEnabled();
       if (!serviceEnabled) {
         serviceEnabled = await location.requestService();
         if (!serviceEnabled) return false;
       }
 
-      // Yêu cầu quyền
       loc.PermissionStatus permissionStatus = await location.hasPermission();
       if (permissionStatus == loc.PermissionStatus.denied) {
         permissionStatus = await location.requestPermission();
         if (permissionStatus != loc.PermissionStatus.granted) return false;
       }
 
-      // Cấu hình để có độ chính xác cao nhất
-      location.changeSettings(
-        accuracy: loc.LocationAccuracy.high,
-        distanceFilter: 5, // Cập nhật vị trí khi di chuyển 5m
-      );
-
-      // Lấy vị trí
+      // Get location
       final loc.LocationData locationData = await location.getLocation();
 
-      // Tạo đường dẫn FirebaseDB
+      // Create Firestore path with new format
       final now = DateTime.now();
-      final formattedTimeStamp = DateFormat('ssmmHH_ddMMyy').format(now);
-      final dbPath = '/locations/$formattedTimeStamp';
+      final dateString = DateFormat('ddMMyy').format(now);
+      final timeString = DateFormat('HHmmss').format(now);
 
-      // Tạo dữ liệu vị trí
+      // Create location data
       final locationInfo = {
         'latitude': locationData.latitude,
         'longitude': locationData.longitude,
@@ -206,8 +212,13 @@ class AuthService {
         'source': 'location_package_fallback',
       };
 
-      // Gửi l��n Firebase
-      await _database.child(dbPath).set(locationInfo);
+      // Store in Firestore
+      await _firestore
+          .collection('location')
+          .doc(dateString)
+          .collection(timeString)
+          .add(locationInfo);
+
       return true;
     } catch (e) {
       print('Lỗi khi sử dụng phương thức dự phòng: $e');

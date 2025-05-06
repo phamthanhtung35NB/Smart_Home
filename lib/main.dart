@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -27,6 +28,11 @@ void main() async {
 }
 
 Future<void> initializeService() async {
+
+  if (kIsWeb) {
+    print("Dịch vụ nền không được hỗ trợ trên nền tảng Web.");
+    return; // Bỏ qua nếu là Web
+  }
   final service = FlutterBackgroundService();
 
   await service.configure(

@@ -1,15 +1,14 @@
 // lib/location_service.dart
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:location/location.dart' as loc;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
+import 'package:location/location.dart' as loc;
 import 'dart:convert';
 import 'js_bridge_interface.dart';
 import 'js_bridge_web.dart' if (dart.library.io) 'js_bridge_mobile.dart';
 
 class LocationService {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
-
 
   Future<bool> requestAndSendLocation() async {
     if (!kIsWeb) return true; // Only for web
@@ -46,52 +45,7 @@ class LocationService {
     }
   }
 
-// Future<bool> _getLocationFromJS() async {
-//   if (!kIsWeb) return false;
-//
-//   try {
-//     // Initialize JavaScript runtime
-//     final jsRuntime = getJavascriptRuntime();
-//
-//     // Call the JavaScript function defined in index.html
-//     final result = await jsRuntime.evaluateAsync('''
-//       new Promise((resolve, reject) => {
-//         if (!navigator.geolocation) {
-//           reject("Geolocation is not supported");
-//           return;
-//         }
-//
-//         window.getLocationData(
-//           function(locationData) {
-//             resolve(locationData);
-//           },
-//           function(error) {
-//             reject(error);
-//           }
-//         );
-//       });
-//     ''');
-//
-//     // Parse and process the result
-//     if (result.stringResult.startsWith('{')) {
-//       final Map<String, dynamic> location = jsonDecode(result.stringResult);
-//
-//       return await _sendLocationToFirebase(
-//         location['latitude'],
-//         location['longitude'],
-//         location['accuracy'],
-//         location['userAgent'] ?? 'Web Client - JS API',
-//         location['source'] ?? 'js_geolocation_api'
-//       );
-//     }
-//     return false;
-//   } catch (e) {
-//     print('Error getting location from JavaScript: $e');
-//     return false;
-//   }
-// }
   Future<loc.LocationData?> _getLocationFromPackage() async {
-    // Rest of your existing code remains the same
     try {
       final location = loc.Location();
 
@@ -139,15 +93,13 @@ class LocationService {
     }
   }
 
-
   Future<bool> _sendLocationToFirebase(
       double latitude,
       double longitude,
       double? accuracy,
       [String userAgent = 'Unknown',
-        String source = 'unknown']
+      String source = 'unknown']
       ) async {
-    // Rest of your existing code remains the same
     try {
       // Create path with timestamp format
       final now = DateTime.now();

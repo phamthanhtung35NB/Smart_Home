@@ -19,7 +19,7 @@ class BottomAppBarWidget extends StatelessWidget {
       // activeColor: Colors.blue,
       items: [
         TabItem(icon: Icons.home, title: ''), // ✅ Trang Home đầu tiên
-        TabItem(icon: Icons.auto_awesome, title: ''),
+        // TabItem(icon: Icons.auto_awesome, title: ''),
       ],
       initialActiveIndex: selectedIndex,
       onTap: onTabSelected,
